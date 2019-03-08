@@ -5,7 +5,7 @@
 
 田村祐（2016）「外国語教育研究における二値データの分析－ロジスティック回帰を例に－」[『外国語教育メディア学会中部支部外国語教育基礎研究部会2015年度報告論集』](https://www.letchubu.net/modules/xpwiki/?2015%E5%B9%B4%E5%BA%A6%E5%A0%B1%E5%91%8A%E8%AB%96%E9%9B%86) 29-82.
 
-
+[https://tam07pb915.github.io/slides.html](https://tam07pb915.github.io/slides.html)でスライドが見れます（ちょっとレイアウト崩れてるかもしれません）
 ### Contact
 #### [Yu TAMURA](https://tamurayu.wordpress.com/ "website")
 ##### Assistant Professor
