@@ -1,0 +1,194 @@
+---
+title: "GLMM Workshop"
+subtitle: "JACET英語語彙・英語辞書・リーディング研究会合同研究会"
+author: "@早稲田大学"
+date: "3/9/2019"
+output: 
+  xaringan::moon_reader:
+    css: ["My-theme.css","My-font.css"]
+    
+---
+
+# Today's Menu
+* はじめに
+    + 経緯
+    + 注意事項
+* WSの準備
+    + RStudio Serverの準備
+    + RおよびRStudioの準備
+* 一般（化）線形（混合）モデルの概略
+* データ分析
+   +一般化線形モデル
+   +一般化線形混合モデル
+* おわりに
+
+---
+class: my-one-page-font
+# はじめに  
+
+* 経緯
+--
+  
+このたびは~~ダブルブッキングで担当できなくなった~~小島ますみ先生に代わって今回のWSの講師を急遽担当させていただくことになりました。どうぞよろしくお願い申し上げます。  
+今回のWSの分析の部分は下記のテクニカルレポートの内容を元にお話させていただきます（論文，データ，Rコードすべてオンライン公開済）。  
+
+--
+
+.small[田村祐（2016）「外国語教育研究における二値データの分析－ロジスティック回帰を例に－」『外国語教育メディア学会中部支部外国語教育基礎研究部会2015年度報告論集』29–82. [リンク](https://www.letchubu.net/modules/xpwiki/?2015%E5%B9%B4%E5%BA%A6%E5%A0%B1%E5%91%8A%E8%AB%96%E9%9B%86)]  
+
+
+---
+# 注意事項①
+
+--
+
+* 本WSでは，Rの基本的な動作トラブルにつきましてはご対応致しかねる場合がありますのでご了承ください
+
+--
+
+* Rの基本的な操作等に習熟されたい方につきましては，R初心者講習会に参加されることをおすすめします  
+
+## [第4回R初心者講習会(3/19-22)](https://www.rbootcamp.org/?p=723) 
+
+---
+# 注意事項②
+
+--
+* 本WSは2時間の設定となっていますが，実際のGLMMの.red[<u>**習得**</u>]には，その倍以上の復習が必要となります
+
+--
+* 今回使用するコードはすべてweb上で公開していますので，復習の際にご利用ください
+
+--
+* 個別の分析に関するご相談にはお応えできない可能性が高いですので，参考文献をご参照ください
+
+---
+# 注意事項③
+
+--
+* 今回は，時間の都合上により線形混合効果モデル（Linear Mixed-Effect Model）は扱いません
+
+--
+* ただし，LMEの発展がGLMMであり，LMEは確率分布の指定が不要なだけですのでR上の分析はほぼ同じで，Rの関数で言えば
+  * `lme4::glmer()`-> GLMM
+  * `lme4::lmer()` -> LME
+
+
+---
+background-image: url("namae.png")
+---
+class: my-one-page-font
+## 簡単に自己紹介
+* 2014年(D1年時)に俗に言う「緑本」.small[（久保, 2012）]を読んでから統計モデリングを勉強するように
+* [Nagoya.R #12](https://atnd.org/events/58339)という勉強会で，「[一般化線形混合モデル入門の入門](https://www.slideshare.net/yutamura1/ss-42303827)」というRを使った線形混合効果モデルのやり方について発表
+* その後から自分の研究でもLMEやGLMMを使うように  
+  - .small[Tamura, Y. (2015). Reinvestigating consciousness-raising grammar task and noticing. _JABAET Journal, 19_, 19–47. -> mixed-effect logistic regression]
+  - .small[Tamura, Y., Fukuta, J., Nishimura, Y., Harada, Y., Hara, K., & Kato, D. (2019). Japanese EFL learners’ sentence processing of conceptual plurality: An analysis focusing on reciprocal verbs. _Applied Psycholinguistics, 41_, 59–91. -> Gamma GLMM]
+
+---
+## WSの準備
+* RStudio Serverの準備  　　
+  - ...
+  - ... 
+* Rのインストール  
+  - ... 
+  - ...
+
+---
+class: my-one-page-font  
+## 一般（化）線形（混合）モデルの概略
+* 一般線形モデル
+  - いわゆる普通の回帰分析（単回帰，重回帰）
+  - .red[正規分布]が仮定される
+  - t検定や分散分析も線形モデルの一種
+* 一般化線形モデル
+  - .red[正規分布以外]の確率分布族を用いるもの
+    - 回数データ（単位時間あたりの生起回数）->ポアソン分布，負の二項分布
+    - 二値データ（正答・誤答）-> 二項分布
+    - 非負の連続量（反応時間等）->ガンマ分布  
+    
+---
+## なぜ一般"化"線形モデルなのか
+* 世の中には正規分布しないデータもたくさんある
+* 正規分布してなくてもデータ分析はできる
+* データが生み出された.red[メカニズム]に着目して分析できる　　
+
+---
+## 確率分布を考える
+
+---
+class: my-one-page-font  
+## 混合効果（mixed effect）とはなにか
+* .red[固定効果]＋.red[変量効果]のこと
+* 分散分析でいうF1.small[（被験者分析）]とF2.small[（項目分析）]を同時にやってしまうようなもの
+* 固定効果->説明変数（独立変数）のこと。いわゆる研究者が見たいもの
+* 変量効果->応答変数（従属変数）に影響を与えてしまうばらつき
+  - 追試を行うときに変わるモノ->変量効果
+      * 例: 単語の頻度効果を調べる追試
+          - 固定効果->単語の頻度（高・低またはあるコーパスでの頻度）
+          - 変量効果->実験参加者，単語（もとの研究と同じ刺激語であっても）  
+
+---
+## 混合効果（mixed effect）とはなにか（続き）
+
+--
+* 実験系でよく扱うデータは参加者のばらつきと項目.small[（e.g,テスト項目や刺激文）]を考慮しなくてはいけない
+--
+
+  - 例1：ある項目・参加者だけ難しい.small[（or 反応時間が長い）]->ランダム切片  
+
+--
+
+  - 例2：ある項目・参加者だけ頻度効果.small[（説明変数の影響）]が大きい->ランダム傾き
+
+ 
+
+---
+class: my-one-page-font  
+## 応用言語学の分野でも新しくない
+* Rと，混合効果モデルが簡単に実装可能な*lme4*パッケージの爆発的普及で一般化
+* 混合効果モデルのイントロ論文として私がいつもおすすめするもの
+  - .small[Cunnings, I. (2012). An overview of mixed-effects statistical models for second language researchers. *Second Language Research, 28*, 369–382. [doi:10.1177/0267658312443651](https://doi.org/10.1177/0267658312443651)]  
+  - .small[ Linck, J. A. & Cunnings, I. (2015), The utility and application of mixed‐effects models in second language research. *Language Learning, 65*, 185-207. [doi:10.1111/lang.12117](https://doi.org/10.1111/lang.12117)]
+
+---
+# データ分析
+* ここからは，実際にRを動かしながらデータ分析を行っていきます
+* スライドではコードや出力結果を適宜省略していますが，分析のすべてのコードと出力は印刷資料に載せています
+* これより先，灰色の背景で囲まれた部分は全てRのコードを示しているとご理解ください
+
+---
+## データ分析の準備
+* RStudio Serverをお使いの方は，今回のWSに必要なパッケージはすでにインストール済です .small[（尾関先生ありがとうございます）]
+* ご自身のRまたはRStudioをご利用の方は，下記のコード.small[（#以降はコメントアウトですので打たなくてOKです）]を実行してパッケージのインストールをお願いします
+
+```{r,eval=F}
+install.packages("lme4") #分析 
+install.packages("sjPlot") #可視化
+install.packages("emmeans") #下位検定と可視化
+install.packages("dplyr") #ハンドリング
+```
+
+
+---
+class: my-one-page-font 
+## 一般化線形モデル(`glm`関数)
+
+* データの読み込み
+
+```{r}
+sample1 <-read.csv("http://bit.ly/kisoken2015Tamura_Sample1")
+head(sample1,5) #データの確認
+```
+
+.small[* 変数の確認  
+  - ID: 参加者ID
+  - group: implicit / explicit
+  - TOEIC: 参加者のTOEICスコア
+  - timing: test1(事前)/test2(事後)
+  - try: 全使用回数
+  - success: 正用回数]
+---
+
+
+

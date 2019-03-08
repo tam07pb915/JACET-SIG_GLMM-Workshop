@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"GLMM Workshop\"\nauthor: \"Yu Tamura\"\ndate: \"3/1/2019\"\noutput: xaringan::moon_reader\n---\n\n```{r setup, include=FALSE}\nknitr::opts_chunk$set(echo = FALSE)\n```\n\n## R Markdown\n\nThis is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.\n\nWhen you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.\n\n## Slide with Bullets\n\n- Bullet 1\n- Bullet 2\n- Bullet 3\n\n## Slide with R Output\n\n```{r cars, echo = TRUE}\nsummary(cars)\n```\n\n## Slide with Plot\n\n```{r pressure}\nplot(pressure)\n```\n\n",
+    "created" : 1551422501918.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3127265878",
+    "id" : "9731DF62",
+    "lastKnownWriteTime" : 1551422841,
+    "last_content_update" : 1551422841078,
+    "path" : "~/OneDrive - Kansai University/2018/GLMM-Workshop/slides.Rmd",
+    "project_path" : "slides.Rmd",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

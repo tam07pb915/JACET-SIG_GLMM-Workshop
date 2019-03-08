@@ -1,0 +1,989 @@
+---
+title: "GLMM Workshop"
+subtitle: "JACET英語語彙・英語辞書・リーディング研究会合同研究会"
+author: "@早稲田大学"
+date: "3/9/2019"
+output:
+  xaringan::moon_reader:
+    css: ["My-theme.css","My-font.css"]
+    
+---
+
+# Today's Menu
+* はじめに
+    + 経緯
+    + 注意事項
+* WSの準備
+    + RStudio Serverの準備
+    + RおよびRStudioの準備
+* 一般（化）線形（混合）モデルの概略
+* データ分析
+   +一般化線形モデル
+   +一般化線形混合モデル
+* おわりに
+
+---
+class: my-one-page-font
+# はじめに  
+
+* 経緯
+
+  
+今回のWSの分析の部分は下記のテクニカルレポートの内容を元にお話させていただきます（論文，データ，Rコードすべてオンライン公開済）。  
+
+
+.small[田村祐（2016）「外国語教育研究における二値データの分析－ロジスティック回帰を例に－」『外国語教育メディア学会中部支部外国語教育基礎研究部会2015年度報告論集』29–82. [リンク](https://www.letchubu.net/modules/xpwiki/?2015%E5%B9%B4%E5%BA%A6%E5%A0%B1%E5%91%8A%E8%AB%96%E9%9B%86)]  
+
+
+---
+# 注意事項①
+
+
+* 本WSでは，Rの基本的な動作トラブルにつきましてはご対応致しかねる場合がありますのでご了承ください
+
+--
+
+* Rの基本的な操作等に習熟されたい方につきましては，R初心者講習会に参加されることをおすすめします  
+
+## [第4回R初心者講習会(3/19-22)](https://www.rbootcamp.org/?p=723) 
+
+---
+# 注意事項②
+
+--
+* 本WSは2時間の設定となっていますが，実際のGLMMの.red[<u>**習得**</u>]には，その倍以上の復習が必要となります
+
+--
+* 今回使用するコードはすべてweb上で公開していますので，復習の際にご利用ください
+  - GitHub: [https://github.com/tam07pb915/JACET-SIG_GLMM-Workshop](https://github.com/tam07pb915/JACET-SIG_GLMM-Workshop)
+
+--
+* 個別の分析に関するご相談にはお応えできない可能性が高いですので，参考文献をご参照ください
+
+---
+# 注意事項③
+
+--
+* 今回は，時間の都合上により線形混合効果モデル（Linear Mixed-Effect Model）は扱いません
+
+--
+* ただし，LMEの発展がGLMMであり，LMEは確率分布の指定が不要なだけですのでR上の分析はほぼ同じで，Rの関数で言えば下記のようになります
+  * `lme4::glmer()`-> GLMM
+  * `lme4::lmer()` -> LME
+
+
+---
+background-image: url("namae.png")
+---
+class: my-one-page-font
+## 簡単に自己紹介
+* 2014年(D1年時)に俗に言う「緑本」.small[（久保, 2012）]を読んでから統計モデリングを勉強するように
+* [Nagoya.R #12](https://atnd.org/events/58339)という勉強会で，「[一般化線形混合モデル入門の入門](https://www.slideshare.net/yutamura1/ss-42303827)」というRを使った線形混合効果モデルのやり方について発表
+* その後から自分の研究でもLMEやGLMMを使うように  
+  - .small[Tamura, Y. (2015). Reinvestigating consciousness-raising grammar task and noticing. _JABAET Journal, 19_, 19–47. -> mixed-effect logistic regression]
+  - .small[Tamura, Y., Fukuta, J., Nishimura, Y., Harada, Y., Hara, K., & Kato, D. (2019). Japanese EFL learners’ sentence processing of conceptual plurality: An analysis focusing on reciprocal verbs. _Applied Psycholinguistics, 41_, 59–91. -> Gamma GLMM]
+
+---
+## WSの準備
+* RStudio Serverの準備  　　
+  - RStudio Serverを利用される方は，資料の指示にしたがってログインしてください
+  - RStudio Serverは文字通りインターネット上でRStuioを利用するものです
+  - RStudio Serverを利用される方は，.red[別途RやRStudioを立ち上げる必要はありません]
+* RまたはRStudioの起動
+  - ご自身のRを立ち上げてください（バージョンが古い方は使えないパッケージがある可能性があります）
+  - RStudioをご利用の方は，このWS用のProjectを作っておくことをおすすめします
+
+---
+class: my-one-page-font  
+## 一般（化）線形（混合）モデルの概略
+* 一般線形モデル
+  - いわゆる普通の回帰分析（単回帰，重回帰）
+  - .red[正規分布]が仮定される
+  - t検定や分散分析も線形モデルの一種
+* 一般化線形モデル
+  - .red[正規分布以外]の確率分布族を用いるもの
+    - 回数データ（単位時間あたりの生起回数）->ポアソン分布，負の二項分布
+    - 二値データ（正答・誤答）-> 二項分布
+    - 非負の連続量（反応時間等）->ガンマ分布，逆正規分布  
+    
+---
+## なぜ一般"化"線形モデルなのか
+* 世の中には正規分布しないデータもたくさんある
+* 正規分布してなくてもデータ分析はできる
+* データが生み出された.red[メカニズム]に着目して分析できる
+* 確率分布とリンク関数の組み合わせでより柔軟でデータの実体に即した分析が可能
+* 導入としては，『緑本』がおすすめです
+
+久保拓哉(2012). 『データ解析のための統計モデリング入門：一般化線形モデル・階層ベイズモデル・MCMC』. 岩波書店
+
+---
+## 確率分布を考える
+
+---
+class: my-one-page-font  
+## 混合効果（mixed effect）とはなにか
+* .red[固定効果]＋.red[変量効果]のこと
+* 分散分析でいうF1.small[（被験者分析）]とF2.small[（項目分析）]を同時にやってしまうようなもの
+* 固定効果->説明変数（独立変数）のこと。いわゆる研究者が見たいもの
+* 変量効果->応答変数（従属変数）に影響を与えてしまうばらつき
+  - 追試を行うときに変わるモノ->変量効果
+      * 例: 単語の頻度効果を調べる追試
+          - 固定効果->単語の頻度（高・低またはあるコーパスでの頻度）
+          - 変量効果->実験参加者，単語（もとの研究と同じ刺激語であっても）  
+
+---
+## 混合効果（mixed effect）とはなにか（続き）
+
+--
+* 実験系でよく扱うデータは参加者と項目.small[（e.g,テスト項目や刺激文）]のばらつきを考慮しなくてはいけない
+--
+
+  - 例1：ある項目・参加者だけ難しい.small[（or 反応時間が長い）]->ランダム切片  
+
+--
+
+  - 例2：ある項目・参加者だけ頻度効果.small[（説明変数の影響）]が大きい->ランダム傾き
+
+ 
+
+---
+class: my-one-page-font  
+## 応用言語学の分野でも新しくない
+* Rと，混合効果モデルが簡単に実装可能な*lme4*パッケージの爆発的普及で一般化
+* 混合効果モデルのイントロ論文として私がいつもおすすめするもの
+  - .small[Cunnings, I. (2012). An overview of mixed-effects statistical models for second language researchers. *Second Language Research, 28*, 369–382. [doi:10.1177/0267658312443651](https://doi.org/10.1177/0267658312443651)]  
+  - .small[ Linck, J. A. & Cunnings, I. (2015), The utility and application of mixed‐effects models in second language research. *Language Learning, 65*, 185-207. [doi:10.1111/lang.12117](https://doi.org/10.1111/lang.12117)]
+  
+---
+class: my-one-page-font  
+## 今回のWSで扱う分析
+### ロジスティック回帰分析
+* 0/1（成功・失敗）のデータを扱うときに使う
+* 二項分布を用いる
+  - $n$回（ただし $n>0$ ）の試行のうちの成功回数 $k$ が発生する確率 $q$ を求める
+  - 各試行は独立な試行（ベルヌーイ試行）
+  
+$p(k|N,q)=_{N}C_{k}*q^{k}(1-q)^{N-k}$ 
+
+* コインを10回投げて4回表が出る確率は？.small[（ただしq=0.5とする）]
+$p(4|10,0.5)=_{10}C_{4}0.5^{4}(1-0.5)^{10-4}=$ `r round(210*0.5^4*((1-0.5)^(10-4)),3)` 
+
+---
+## ロジスティック関数の導入
+* 普通の線形回帰式
+
+$Y=\beta_{0}+\beta_{1}X_{1}...$
+
+* $Y$は従属変数， $\beta_{0}$は切片， $\beta_{1}X_{1}$は独立変数 $X$の係数であり，右辺は.red[線形予測子]と呼ばれる
+* 30人の学習者がいて，それぞれの学習者がある文法項目を正確に使用する確率を $q_{i}$としたときのロジスティック回帰モデル（ $z_{i}$には線形予測子が入っていると考える）
+
+$$q_{i}={\rm logistic} (z_{i})=\frac{1}{1+\exp(-z_{i})}$$
+---
+## ロジスティック関数からロジット関数へ
+* 先ほどのロジスティック関数を変形すると次のようになる
+
+$${\rm log}(\frac{q_{i}}{1-q_{i}})=z_{i}$$
+
+* この式の左辺はロジット関数と呼ばれる
+* ロジスティック関数とロジット関数は逆関数の関係にある
+* ロジスティクス関数と線形予測子の関係をつなぐリンク関数がロジットリンク関数
+
+
+---
+class: my-one-page-font 
+## ロジスティック回帰のまとめ
+* 下記のような方程式を解くこと
+$${\rm log}(\frac{q_{i}}{1-q_{i}})=\beta_{0}+\beta_{1}X_{1}...$$
+* 個人ごとの成功確率である $q_{i}$は得られたデータからわかることであり， $X_{1}$は独立変数の値である
+* $\beta_{0}$と $\beta_{1}...$を最尤推定.small[(maximum Likelihood estimation)]で求める
+* オッズ（ $\frac{q_{i}}{1-q_{i}}$）の対数( $log$)が線形予測子と等しいので次のようにも表現できる
+
+$$\frac{q_{i}}{1-q_{i}}=\exp(\beta_{0}+\beta_{1}X_{1}...)$$
+$$=\exp(\beta_{0})*\exp(\beta_{1}X_{1})...$$
+
+---
+# データ分析
+* ここからは，実際にRを動かしながらデータ分析を行っていきます
+* スライドではコードや出力結果を適宜省略していますが，分析のすべてのコードと出力は印刷資料に載せています
+* これより先，灰色の背景で囲まれた部分は全てRのコードを示しているとご理解ください
+* Rのコードを打ち込むことに慣れていない方は，GitHubから.Rmdファイルまたは.htmlファイルをDLしてコピペすることをおすすめします
+
+---
+## データ分析の準備
+* RStudio Serverをお使いの方は，今回のWSに必要なパッケージはすでにインストール済です .small[（尾関先生ありがとうございます）]
+* ご自身のRまたはRStudioをご利用の方は，下記のコード.small[（#以降はコメントアウトですので打たなくてOKです）]を実行してパッケージのインストールをお願いします
+
+```{r,eval=F}
+install.packages("lme4") #分析 
+install.packages("sjPlot") #可視化
+install.packages("broom")
+install.packages("emmeans") #下位検定と可視化
+install.packages("dplyr") #ハンドリング
+install.packages("tidyr") #ハンドリング
+install.packages("psych") #記述統計
+install.packages("MASS") #分析
+install.packages("car") #分析
+
+```
+
+---
+## パッケージの読み込み
+* インストールしたパッケージを使えるようにします
+```{r,warning=F,message=F}
+library(lme4)
+library(sjPlot)
+library(broom)
+library(emmeans)
+library(dplyr)
+library(tidyr)
+library(psych)
+library(MASS)
+library(car)
+
+```
+
+---
+class: my-one-page-font 
+## 背景（GLM）
+* とある文法項目に対するフィードバックの効果検証.small[（※仮想データです）]
+  - 明示的（explicit）フィードバッ群
+  - 暗示的（implicit）フィードバック群
+* 事前と事後の伸びを比較
+* 学習者ごとにその項目を使った回数が異なる->割合にしてしまいがちだがそうしない
+* 参加者のTOEICスコアが異なる->low, mid, highみたいにしてしまいがちだがそうしない
+  - だいたいの場合分け方が恣意的
+  - 群分けすることでせっかくのデータが失われる
+  - 非線形の関係があるなら群分けしても...と思うがそれならGAM (General Additive Model)という手も.small[（cf. [Murakami, 2016](https://doi.org/10.1111/lang.12166))]
+
+---
+class: my-one-page-font 
+## 一般化線形モデル(`glm`関数)
+
+* 仮想データの読み込み
+
+```{r}
+sample1 <-read.csv("http://bit.ly/kisoken2015Tamura_Sample1")
+head(sample1,5) #データの確認
+```
+
+.small[* 変数の確認  
+  - ID: 参加者ID
+  - group: implicit / explicit
+  - TOEIC: 参加者のTOEICスコア
+  - timing: test1(事前)/test2(事後)
+  - try: 全使用回数
+  - success: 正用回数]
+
+---
+## 成功確率の記述統計を出してみる①
+まず，成功回数/試行回数を計算して成功率データの列をsample1に付け加える
+```{r}
+sample1$acc<-rep(0,nrow(sample1)) #まずは新しい列を用意
+for (i in 1:nrow(sample1)){
+  sample1[i,7]<-sample1[i,6]/sample1[i,5]
+  }
+head(sample1) #accの行に割合データが追加されているか確認
+```
+
+---
+## 成功確率の記述統計を出してみる②
+```{r}
+sample1%>% #%>%はパイプ演算子で，左側でやったことを右側に渡すという意味
+  dplyr::group_by(group)%>% #グループごとに分ける
+  dplyr::group_by(timing,add=T)%>% #事前と事後で分ける
+  dplyr::summarize_at(.,vars(acc),funs(mean,sd,min,max)) #accの行について平均，標準偏差，最大・最長地を計算
+```
+
+---
+## 成功確率の散布図を描いてみる①
+まずデータを分割します
+```{r}
+#Implicit group
+sample1%>%
+  dplyr::filter(group=="implicit")%>%
+  dplyr::select(ID,acc,timing)->acc_imp #必要な列だけ抜き出してacc_impに入れる
+
+#Explicit group
+sample1%>%
+  dplyr::filter(group=="explicit")%>%
+  dplyr::select(ID,acc,timing)->acc_exp #必要な列だけ抜き出してacc_expに入れる
+```
+
+---
+class: my-one-page-font 
+## 成功確率の散布図を描いてみる②
+コードが長いのでスライド上では省略しています。お手元の資料またはGitHub上のRコードを御覧ください。
+```{r fig.width=6.5,fig.height=6.5,fig.align='center',echo=F}
+plot(as.matrix(subset(acc_exp,timing=="test1")[,2]),
+     as.matrix(subset(acc_exp,timing=="test2")[,2]),
+     xlab="",ylab="",main="",
+     ylim=c(0,1),xlim=c(0,1),cex.lab=1.2,
+     col="blue",axes=F,cex=1.5)
+par(new=T) #図を重ねるために
+plot(as.matrix(subset(acc_imp,timing=="test1")[,2]),
+     as.matrix(subset(acc_imp,timing=="test2")[,2]),
+     xlab="pre",ylab="post",
+     main="",ylim=c(0,1),xlim=c(0,1),cex.lab=1.2,
+     col="red",cex=1.5)
+legend("bottomright",legend=c("Implicit","Explicit"),
+       col=c("red","blue"),pch=c(1,1)) #凡例を右下に
+abline(0,1) #真ん中に斜線を引っ張る
+```
+
+---
+class: my-one-page-font
+### データ分析前の準備
+1.コーディングの変更
+* Rのデフォルトはダミーコーディング（0, 1)ですが，これを変更します
+* 参考: [http://talklab.psy.gla.ac.uk/tvw/catpred/](http://talklab.psy.gla.ac.uk/tvw/catpred/)
+
+```{r}
+c<-contr.treatment(2)
+my.coding <-matrix(rep(1/2,2,ncol=1))
+my.simple <-c-my.coding
+print(my.simple)#my.simpleが-0.5, 0.5の行列になっているのを確認
+contrasts(sample1$group)<-my.simple #group変数のコーディングを変更
+contrasts(sample1$timing)<-my.simple #timing変数のコーディングを変更
+str(sample1) #データセットの構造の確認
+```
+---
+### データ分析前の準備
+2.連続変数の中心化
+* 主に，多重共線性（変数間の相関が高くなりすぎてしまい誤った解釈を引き起こしてしまう問題）を回避するために連続変数を中心化する
+* 連続変数を標準化（zスコア化）すると，出力時の偏回帰係数は標準化偏回帰係数となる
+```{r}
+sample1$c.TOEIC <-sample1$TOEIC-mean(sample1$TOEIC)
+head(sample1)
+```
+
+---
+class: my-one-page-font
+### 本分析
+* ロジスティック回帰は`cbind(成功回数, 試行回数-成功回数)`が応答変数
+  - 人の生死など，1人につき0か1かのみが与えられる場合は応答変数列は0または1が含まれるベクトルでよい
+* モデル式
+  - 基本の形は応答変数~説明変数+...
+  - `X+Y+X:Y`は`X`の主効果，`Y`の主効果，`X:Y`の交互作用の意味
+  - `X+Y+X:Y`は`X*Y`と同義である
+* 様々なモデルを比較するため，`model`というリスト形式の変数を作ってそこに結果を格納する
+
+```{r}
+model<-list()
+model[[1]]<-glm(cbind(success,try-success)~timing+group+timing:group,
+            family=binomial(link="logit"),data=sample1)
+
+```
+
+---
+class: my-one-page-font
+### 分析結果の確認
+```{r}
+summary(model[[1]])
+```
+
+---
+* .small[Estimateは偏回帰係数，Std.Errorは標準誤差，Z.valueとp-valueは回帰係数の有意性検定]
+```{r,echo=F}
+summary(model[[1]])
+```
+
+---
+* .small[Residual deviance (残差逸脱度)が自由度より大きければ要注意]
+```{r,echo=F}
+summary(model[[1]])
+model[[1]]$df.residual
+```
+
+---
+### 分析はうまくいったのか
+* フィードバックのタイプおよび介入効果の主効果と交互作用を含んだモデルの結果を確認すると，交互作用が`p < .001`であることがわかる
+* しかしながら，残差逸脱度が`r round(model[[1]]$deviance,3)`であり， `r model[[1]]$df.residual`を大きく上回っている
+  - これは過分散を意味している
+    - 元のデータの分散が二項分布で仮定されるものよりも多い or
+    - データを説明できる何らかの要因が含まれていない可能性
+    
+---
+class: my-one-page-font
+### 交互作用があるかどうかをどう判定するか
+* 交互作用項が含まれていないモデルをつくり，尤度比検定やAIC(Akaike Information Criterioin)の比較を行う
+```{r}
+#モデルの更新にはupdate()関数が便利。変える部分だけ+や-で調整する
+model[[2]]<-update(model[[1]],.~.-timing:group) #交互作用を抜く
+anova(model[[1]],model[[2]],test = "Chisq") 
+```
+
+```{r}
+AIC(model[[1]])-AIC(model[[2]]) #小さい方がよいので負の値なら[[1]]がベター
+```
+* 交互作用項が含まれる方が良いモデル
+
+---
+class: my-one-page-font
+### 熟達度の影響を考慮する
+* .small[交互作用があるのはわかったが，熟達度（TOEICスコア）の影響があるかもしれない]
+```{r}
+model[[3]]<-update(model[[1]],.~.+c.TOEIC)
+#summary(model[[3]])
+```
+
+* .small[`model[[2]]`と`model[[3]]`を比べると`model[[3]]`のほうが残差逸脱度も低くて良さそう]
+```{r}
+anova(model[[2]],model[[3]],test="Chisq")
+```
+
+---
+### 熟達度の影響を考慮する
+* TOEICスコアを投入した`model[[3]]`のAICは`r round(AIC(model[[3]]),3)`であり，他の2つよりも良いモデルだと言える
+```{r}
+#リストの要素に同じ関数を一度で適用できるのがsapply関数
+sapply(model,AIC)%>%as.data.frame 
+```
+
+* しかし，これではTOEICスコアの高低が文法使用の正確性に影響していることしかわからない
+* フィードバックの効果が熟達度によって異なるかもしれない
+
+---
+### 交互作用項のさらなる追加
+
+```{r}
+#binomialのデフォルトリンク関数はlogitなので省略可能
+model[[4]]<-glm(cbind(success,try-success)~
+                timing*group*c.TOEIC,
+                data=sample1,family = binomial)
+```
+
+---
+* 三次の交互作用は有意ではない
+```{r}
+summary(model[[4]])
+```
+
+
+---
+### モデル選択という考え方
+* 回帰分析の変数投入方法にはいろいろな方法があるが，MASSパッケージの`step`関数を使うと，AICに基づいてモデル選択の結果を返してくれる
+* 一番複雑な`model[[4]]`をstep関数に渡すと，AICが最小となるモデルが得られる
+
+```{r,eval=T,results="hide"}
+#結果が長いので省略
+step(model[[4]])
+step(model[[4]])->model[[5]] #選ばれたモデルをmodel[[5]]に
+```
+
+---
+```{r}
+summary(model[[5]])
+```
+
+---
+* 残差逸脱度も問題なさそう
+```{r,results="hold"}
+model[[5]]$df.residual
+model[[5]]$deviance
+```
+
+* 多重共線性も問題なさそう
+  - VIF (Variation Inflation Factor)
+  - 説明変数感の相関がゼロであればVIFは1になる
+  - VIFが5より大きければ多重共線性の可能性が大きく注意が必要（田中他, 2008, p.116）
+```{r}
+vif(model[[5]])
+```
+
+---
+### 図示（フィードバックのタイプの影響）
+```{r,warning=F,message=F,fig.align="center",fig.height=6,fig.width=6}
+plot_model(model[[5]],type="pred",terms = c("timing","group"))
+```
+---
+### 図示（フィードバックと熟達度の関係）
+```{r,warning=F,message=F,fig.align="center",fig.height=6,fig.width=6}
+plot_model(model[[5]],type="pred",terms = c("c.TOEIC","timing"))
+#plot_model(model[[4]],type="pred",terms = c("c.TOEIC","timing","group"))
+```
+
+---
+### 分析のここまでのまとめ
+* どちらのフィードバックも効果がありそう
+* でも暗示的フィードバックのほうが効果が暗示的フィードバックよりも効果がありそう
+* 熟達度が低い学習者にとってフィードバックの効果がより大きそう
+
+---
+### 効果量（オッズ比）を求める①
+* ある事象の起こる確率が $p$で表されるとき，オッズは次のようになる
+
+$$Odds = \frac{p}{1-p}$$
+* オッズ比はオッズの比で表されるので，確率 $p$と確率 $q$のオッズ比は次のようになる
+
+$$\frac{\frac{p}{1-p}}{\frac{q}{1-q}}$$
+---
+### 効果量（オッズ比）を求める②
+* ロジット関数を思い出すと，これはオッズの対数であり，商の対数は対数の差と等しいので次のように表せる
+
+$${\rm log}(\frac{q_{i}}{1-q_{i}})={\rm log}(q_{i})-log(1-q_{i})$$
+* つまり，2つの確率のロジットの差がオッズ比の対数である
+
+$${\rm log}(\frac{p}{1-p})-{\rm log}(\frac{q}{1-q})={\rm log}(\frac{\frac{p}{1-p}}{\frac{q}{1-q}})$$
+---
+### 効果量（オッズ比）を求める③
+* このオッズ比の仕組みが今理解できなくても大丈夫です
+* 大事なことは次のこと
+
+### .red[偏回帰係数を指数変換するとオッズ比]
+
+* Rではexp()という関数があるので，オッズ比は次のように求められる
+```{r}
+#$coefficientsは結果の中の推定値に直接アクセスするという意味
+model[[5]]$coefficients%>%exp
+```
+
+
+---
+### オッズ比を細かく見ていく
+* ダミー変数の作成  
+.small[※データセットを分けてやっても結果はそこまで変わらないです]
+```{r}
+#グループごと
+sample1$group.e<-sample1$group
+sample1$group.i<-sample1$group
+contrasts(sample1$group)+0.5->contrasts(sample1$group.e)
+contrasts(sample1$group)-0.5->contrasts(sample1$group.i)
+
+#テストごと
+sample1$timing1<-sample1$timing
+sample1$timing2<-sample1$timing
+contrasts(sample1$timing)+0.5->contrasts(sample1$timing1)
+contrasts(sample1$timing)-0.5->contrasts(sample1$timing2)
+
+```
+
+---
+class: my-one-page-font
+### グループごとのフィードバックの効果のオッズ比
+* 明示的フィードバックグループ
+```{r,results="hold"}
+glm(cbind(success, try-success)~ timing*group.e+c.TOEIC,
+    data = sample1,family = binomial)%>%
+  tidy(.,conf.int=T,exponentiate=T)
+#tidy関数でオッズ比と信頼区間をわかりやすく表示
+```
+
+---
+class: my-one-page-font
+### グループごとのフィードバックの効果のオッズ比
+* 暗示的フィードバックグループ
+```{r,results="hold"}
+glm(cbind(success, try-success)~ timing*group.i+c.TOEIC
+    ,data = sample1,family = binomial)%>%
+  tidy(.,conf.int=T,exponentiate=T)
+#tidy関数でオッズ比と信頼区間をわかりやすく表示
+```
+
+---
+### 事前と事後でのTOEICスコアのオッズ比
+```{r}
+model[[6]]<-glm(cbind(success, try-success)~ timing1*group+c.TOEIC*timing1,data = sample1,family = binomial) #事前
+model[[7]]<-glm(cbind(success, try-success)~ timing2*group+c.TOEIC*timing2,data = sample1,family = binomial) #事後
+```
+
+* わかりにくいので，100倍して，100点上がったときのオッズ比を出す
+```{r}
+exp(model[[6]]$coefficients[4]*100)
+exp(model[[7]]$coefficients[4]*100)
+```
+
+---
+class: my-one-page-font
+### 他にも便利な関数の紹介①
+
+* GLMなどのモデルをHTML形式のきれいなテーブルにしてくれるsjPlotパッケージのtab_model関数
+```{r,eval=F}
+tab_model(model[[5]]) #引数でいろいろ調整できます
+```
+
+![sample](tab_model.png)
+---
+class: my-one-page-font
+###  他にも便利な関数の紹介②
+* epiDisplayというパッケージのlogistic.display関数でもテーブル形式でオッズ比がみれます
+```{r,eval=F}
+install.packages("epiDisplay")
+
+```
+
+```{r,eval=T}
+library(epiDisplay)
+logistic.display(model[[5]])
+```
+
+---
+## ロジスティック回帰のいいところ
+* 線形モデルのように素点ではなく正答（成功）の確率を扱うため，結果の解釈が容易
+  - オッズ比を求めれば，AよりBのほうがX倍正答しやすいというような言い方ができる
+  - 分散分析の効果量は報告されど積極的に解釈しにくい
+* 分散分析では連続変数を独立変数としてモデルに投入できないが，回帰分析ならできる
+  - ロジスティック回帰で連続変数を入れると，独立変数が任意の単位分変化したときの従属変数の変化量を求めることができる
+  
+---  
+
+## 注意点
+* 連続変数を入れるときは，従属変数との線形的な関係があることが前提
+  - 例えば，低熟達度では高く，中熟達度で下がり，高熟達度でまた高くなるような非線形の関係がある場合はうまくモデリングできない
+  - 非線形の関係があるかどうかは図示または一般化加法モデル(General Additive Model）によって確認が必要
+  - GAMをやっている論文はあまり見かけないが，Akira Murakamiさんの下記の論文は例がわかりやすい上にRのコードも付録としてついているのでオススメ
+
+.small[Murakami, A. (2016), Modeling systematicity and individuality in nonlinear second language development: The case of English grammatical morphemes. _Language Learning, 66_, 834-871. doi:10.1111/lang.12166 ]  
+  
+---
+## 後半戦（GLMMへの拡張）
+
+* 先程のフィードバックの例では，TOEICスコアを利用することによりある程度個人差を考慮できた
+* では，テストのように複数の項目についての0/1データを分析する場合はどうすればよいのか
+* 多くの場合，実験の条件の統制や刺激の統制には限界がある
+* そこで，個人や項目のばらつきを変量効果としてモデルに組み込む**一般化線形混合モデル**を使用する
+* 説明変数を**固定効果(fixed effect)**，集団や個人の変動を**変量効果（random effect）**と呼ぶ
+* このような分析方法はマルチレベル分析とも呼ばれる（概説は清水, 2014の第1, 2章が丁寧でわかりやすい）
+
+---
+class: my-one-page-font
+### GLMMの分析に使うデータの概要
+* 下記の発表で用いられたデータ  
+
+.small[田村祐（2016）「文法性判断課題における反応時間と主観的測度は正答率を予測するか–文法項目の違いに焦点をあてて–」 外国語教育メディア学会中部支部外国語教育基礎研究部会第三回年次例会. 名古屋学院大学. [[投影資料]](https://speakerdeck.com/tam07pb915/kisoken3rd)]
+
+* 応答変数（response variable): 文法性判断課題の正答・誤答データ
+* 説明変数
+  - 反応時間
+  - 主観的測度（規則が説明できる or 直感である）
+  - 名詞の種類（普通名詞12項目・物質名詞12項目）
+    - 普通名詞の例：apple, dog, pen, knife, child
+    - 物質名詞の例：gold, wine, toast, rice
+
+---
+class: my-one-page-font
+### 概要
+* 実験
+  * それぞれの項目ごとに，文法文と非文法文があり，2つのリストに参加者をランダムに振り分けてカウンターバランス
+  * 刺激文24にフィラー文40文を加えた合計64文の文法性判断課題
+  * PC上で行われ，注視点(1000ms)->ブランク(500ms)->刺激文の提示
+  * キー押下によって文法性判断
+  * 判断後に直前の回答の判断のリソースを「自分の知っている規則である」「直感である」の2つから選択
+* 参加者
+  - 日本語を第一言語とする大学生・大学院生24名
+  - TOEICの平均スコアは704（_SD_ = 95.39, _n_ = 22）
+  
+---
+class: my-one-page-font
+### 一般化線形混合モデル(`glmer`関数)
+* データの読み込み
+```{r}
+sample2 <-read.csv("http://bit.ly/kisoken2015Tamura_Sample2",header=T)
+head(sample2)
+```
+
+.small[* 変数の確認  
+  - ID: 参加者ID
+  - itemID: 項目のID
+  - judgment: 文法性判断の正答・誤答（0/1）
+  - rt: 反応時間
+  - sub.measure: 主観的測度（0=直感，1=規則0）
+  - form: 参加者のフォーム
+  - Type: 名詞の種類]
+
+---
+class: my-one-page-font
+### 成功確率の記述統計
+* 先ほどのデータと違って1人のデータは1行に0/1が複数行となっているのでちょっと工夫が必要
+* コードは省略していますのでRmdファイルかお手元の資料を御覧ください
+* 普通名詞のほうが正答率が高そう
+* 直感よりも規則のほうが高そう
+```{r,echo=F}
+#名詞ごとに，規則か直感かで正答率の差をみる
+sample2%>%
+  dplyr::group_by(ID)%>%
+  dplyr::group_by(Type,add=T)%>%
+  dplyr::group_by(sub.measure,add=T)%>%
+  dplyr::summarise(mean=mean(judgment,na.rm=T))->stat_acc
+  
+stat_acc<-as.data.frame(stat_acc)  
+stat_acc$sub.measure<-as.factor(stat_acc$sub.measure)
+describeBy(stat_acc$mean,group = list(stat_acc$sub.measure,stat_acc$Type))
+```
+
+
+---
+class: my-one-page-font
+### 主観的測度の割合の記述統計
+```{r,echo=F}
+sample2%>%
+  dplyr::group_by(ID)%>%
+  dplyr::group_by(Type,add = T)%>%
+  dplyr::summarise(mean=mean(sub.measure,na.rm=T)) ->stat_sub
+
+stat_sub<-as.data.frame(stat_sub)
+describeBy(stat_sub$mean,group=stat_sub$Type)
+```
+* 普通名詞のほうが主観と答える割合が高そう
+---
+class: my-one-page-font
+### 反応時間の記述統計
+```{r,echo=F}
+#For RT
+sample2%>%
+  dplyr::group_by(ID)%>%
+  dplyr::group_by(sub.measure,add=T)%>%
+  dplyr::group_by(Type,add=T)%>%
+  dplyr::summarise(mean=mean(rt,na.rm=T)) ->stat_rt
+
+stat_rt$sub.measure<-as.factor(stat_rt$sub.measure)
+describeBy(stat_rt$mean,group = list(stat_rt$sub.measure,stat_rt$Type))
+```
+* 直感って言うときのほうがRTが長そう
+
+---
+class: my-one-page-font
+###箱ひげ図を描く
+
+* コードが長いので省略しています
+* 青い点は平均値でバーは96%信頼区間
+```{r}
+### 図を描くためにデータフレームを作る
+sample2%>%
+  dplyr::filter(Type=="CNP")%>%
+  dplyr::group_by(ID)%>%
+  dplyr::summarise(mean=mean(judgment,na.rm=T))->stat_cnp #ランダムに欠損がある場合，na.rm=Tを指定しないと欠損のある学習者のデータが落ちてしまう
+  
+stat_cnp<-as.data.frame(stat_cnp)
+
+
+#For common nouns
+sample2%>%
+  dplyr::filter(Type=="MNP")%>%
+  dplyr::group_by(ID)%>%
+  dplyr::summarise(mean=mean(judgment,na.rm=T))->stat_mnp #ランダムに欠損がある場合，na.rm=Tを指定しないと欠損のある学習者のデータが落ちてしまう
+
+stat_mnp<-as.data.frame(stat_mnp)
+```
+
+```{r, echo=F,results="hide"}
+#beeswarmがなければインストールが必要->install.packages("beeswarm")
+library(beeswarm)
+acc.all<-cbind(stat_cnp$mean,stat_mnp$mean) #二つのデータフレームをくっつける
+acc.all<-as.data.frame(acc.all)
+names(acc.all)<-c("Common","Material") #列名をつける
+head(acc.all) #確認
+```
+
+```{r,fig.width=7,fig.height=6.5,fig.align='center',message=FALSE,echo=F}
+#平均値とその95％信頼区間を描くための準備
+desc.cnp<-describe(stat_cnp$mean) 
+desc.mnp<-describe(stat_mnp$mean)
+upper.cnp<-desc.cnp$mean+(1.96*desc.cnp$se) #信頼区間の上限
+lower.cnp<-desc.cnp$mean-(1.96*desc.cnp$se) #信頼区間の下限
+upper.mnp<-desc.mnp$mean+(1.96*desc.mnp$se)
+lower.mnp<-desc.mnp$mean-(1.96*desc.mnp$se)
+
+
+boxplot(acc.all,boxwex=0.5,ylim=c(0,1))#まずは箱ひげ図
+beeswarm(acc.all,add=T,col="red") #蜂群図を重ねる
+points(1.4,desc.cnp$mean,col="blue",pch=19,cex=1.5) #平均値の点をうつ
+points(2.4,desc.mnp$mean,col="blue",pch=19,cex=1.5)
+arrows(1.4,desc.cnp$mean,1.4,upper.cnp,angle = 90,length = 0.1,col="blue") #平均値から上下に線を引く
+arrows(1.4,desc.cnp$mean,1.4,lower.cnp,angle = 90,length = 0.1,col="blue")
+arrows(2.4,desc.mnp$mean,2.4,upper.mnp,angle = 90,length = 0.1,col="blue")
+arrows(2.4,desc.mnp$mean,2.4,lower.mnp,angle = 90,length = 0.1,col="blue")
+```
+
+---
+## 混合効果ロジスティック分析
+* 変量効果の指定方法
+ - |の右側にグルーピング変数，左側に切片と傾きを指定
+ - 項目の変量効果: `(1|itemID)` .small[1は切片を表す]
+ - 参加者の変量効果: `(1|ID)`.small[1は切片を表す]
+ - 傾きを入れる場合の例：`(1+Type|itemID)`, `(1+Type|ID)`
+* Barr et al. (2013) は，ランダム効果は考えられうる一番複雑なものを入れるように推奨しているが，たいていの場合収束しない(しかも時間がかかるので今回はやりません)
+
+---
+## コーディングの変更と連続変数の中心化
+
+```{r}
+#因子型に変更しないとコーディングを変更できない
+sample2$sub.measure<-as.factor(sample2$sub.measure)
+sample2$Type<-as.factor(sample2$Type)
+contrasts(sample2$sub.measure)<-my.simple
+contrasts(sample2$Type)<-my.simple
+#RTのデータは値が非常に大きく中心化だけではモデルが収縮しづらいので標準化する
+sample2$rt%>%
+  scale%>%
+  as.numeric->sample2$zrt
+```
+
+
+---
+### モデル構築
+* `glmerControl`は収束せずにエラーになってしまうことを避けるおまじないです
+```{r}
+fit<-list()
+fit[[1]]<-glmer(judgment~Type*sub.measure*zrt+
+                  (1+Type+sub.measure+zrt|ID)+(1+Type+sub.measure+zrt|itemID),
+                family=binomial,data=sample2,
+                glmerControl(optimizer = "bobyqa",optCtrl=list(maxfun=2e5)))
+```
+
+
+---
+class: my-one-page-font
+### 結果の確認
+```{r}
+summary(fit[[1]])
+```
+
+---
+### GLMとGLMMで異なる部分
+* Random effsts
+ - ランダム効果の分散とSD->**SDは論文で報告すべき**
+ - ランダム効果間の相関係数が推定されている
+* Correlation of Fixed Effects
+ - 固定効果間の相関
+ - 著しく相関が高い場合多重共線性の疑い有り
+* 分析に用いられた観測数（Number of obs），itemIDの数，IDの数
+ - itemIDが48になっているのは，24文*文法文・非文法文になっているため
+ - 今回は文法性を考慮していないが，本来1つの項目に2条件以上ある場合は同じ項目として扱う
+ 
+---
+### 多重共線性の確認
+* Jaegerが作成したglmerの出力からVIFが計算可能なスクリプトを使用する
+* 2.5以上のものがあれば要チェック
+
+```{r}
+source("https://raw.githubusercontent.com/aufrank/R-hacks/master/mer-utils.R")
+vif.mer(fit[[1]])
+```
+* 今回は問題なさそう
+
+---
+```{r,results="hide",message=F}
+tab_model(fit[[1]],show.stat = T,transform = NULL)
+#transform=NULLを消すと，一番左がLog OddsではなくOdds Ratioになる
+```
+![sample](tab_model_glmm.png)
+
+---
+class: my-one-page-font
+### 図示
+* 交互作用はどれも有意ではなかったが，一応図示してみる
+* 名詞の種類と主観的測度
+```{r,fig.width=7,fig.height=5,fig.align='center',message=FALSE}
+plot_model(fit[[1]],type="pred",terms=c("Type","sub.measure"))
+```
+
+---
+class: my-one-page-font
+### 図示②
+* 名詞の種類と反応時間
+```{r,fig.width=7,fig.height=5,fig.align='center',message=FALSE}
+plot_model(fit[[1]],type="pred",terms=c("zrt","Type"))
+```
+
+---
+class: my-one-page-font
+### 図示③
+* 主観的測度と反応時間
+```{r,fig.width=9,fig.height=5,fig.align='center',message=FALSE}
+plot_model(fit[[1]],type="pred",terms=c("zrt","sub.measure"))
+```
+
+
+---
+### モデルを単純にする
+* 今回は投入する変数の数があまり多くなかったが，変数が多すぎて複雑なモデルを単純化するのが困難な場合，ランダム切片のみのモデルに変数を1つずつ追加し，AICを減少させる変数から順番に投入していくという方法もある
+* もし時間があればあとでやってみます（多分ない）
+```{r}
+fit[[2]]<-glmer(judgment~Type+sub.measure+
+                  (1+Type+sub.measure|ID)+(1+Type+sub.measure|itemID)
+                ,family=binomial,data=sample2,
+                glmerControl(optimizer = "bobyqa",optCtrl=list(maxfun=2e5)))
+```
+
+---
+### 変量効果を図示する①
+* 項目ごとの変量効果
+```{r,fig.width=10,fig.height=5,fig.align='center',message=FALSE}
+#スライドにおさめるために1つずつにしてますが，普段なら[[1]]は不要
+plot_model(fit[[2]],type="re")[[1]]
+#plot_model(fit[[1]],type="re",sort.est = T,grid = F)とすると並び替えができる
+```
+
+---
+### 変量効果を図示する①
+* 参加者ごとの変量効果
+```{r,fig.width=10,fig.height=5,fig.align='center',message=FALSE}
+plot_model(fit[[2]],type="re")[[2]]
+```
+
+---
+### 最終的な結果
+```{r,eval=F}
+summary(fit[[2]])
+```
+
+```{r,eval=T,results="hide",echo=F,message=F}
+tab_model(fit[[2]])
+```
+![sample](tab_model_glmm2.png)
+
+---
+class: my-one-page-font
+### 結果の解釈
+* 主観的測度のオッズ比は1.9なので，規則を説明できるという場合のほうが，直感であるという場合よりも文法性判断に正答する確率が1.9倍高い
+* 名詞タイプのオッズ比は0.33なので，物質名詞が関わる文法性判断課題の正答率は普通名詞のそれよりも0.33倍
+ - 普通名詞を1としたときにその3割ほどしか正答確率がない
+* 反応時間が遅くても速くても正答率に影響があるという傾向が認められなかった
+ - 主観的測度との交互作用なし-> 文法性判断が直感でも規則でもRTは正答率に影響しない
+ - 名詞タイプとの交互作用なし->普通名詞のときでも物質名詞のときでもRTは正答率に影響しない
+ 
+---
+class: my-one-page-font
+### おわりに
+* 一部コードが違いますが，より概念的な説明や参考文献などは，最初に紹介したテクニカルレポートに載っていますのでそちらをご参照ください
+* かなりパッケージに依存した形で処理を行っていますので，パッケージのアップデート等によって動かなくなる可能性もあります
+ - Rのバージョンを新しくする
+ - パッケージがアップデートされたらマニュアルを読んだりネットで調べて変更点を把握する
+ - ようなことも必要になることがあります
+* 論文にするときの報告の仕方等は，Linck and Cunnings (2015)に詳しいです
+* とにかく近年は統計解析技術の進歩が非常に早いです
+ - これさえできればというものでもないです
+ - 今回紹介した手法が5年後もそのまま使えるかはわかりません
+
+
+---
+class: my-one-page-font
+### 参考文献リスト
+* .small[Barr, D. J., Levy, R., Scheepers, C., & Tily, H. J. (2013). Random effects structure for confirmatory hypothesis testing: Keep it maximal. _Journal of Memory and Language, 68_, 255–278.
+[doi:10.1016/j.jml.2012.11.001](https://doi.org/10.1016/j.jml.2012.11.001)]  
+* .small[Cunnings, I. (2012). An overview of mixed-effects statistical models for second language researchers. *Second Language Research, 28*, 369–382. [doi:10.1177/0267658312443651](https://doi.org/10.1177/0267658312443651)]  
+* .small[Murakami, A. (2016), Modeling systematicity and individuality in nonlinear second language development: The case of English grammatical morphemes. _Language Learning, 66_, 834-871. [doi:10.1111/lang.12166 ]((https://doi.org/10.1111/lang.12166)]
+* .small[ Linck, J. A. & Cunnings, I. (2015), The utility and application of mixed‐effects models in second language research. *Language Learning, 65*, 185-207. [doi:10.1111/lang.12117](https://doi.org/10.1111/lang.12117)]
+* .small[久保拓弥 (2012). 『データ解析のための統計モデリング入門』 東京: 岩波書店.]
+* .small[清水裕士 (2014).『個人と集団のマルチレベル分析』京都：ナカニシヤ出版]
+---
+### おまけ
+* 手っ取り早く交互作用のあるモデルを検証したいときは，emmeans関数もあります
+* 特に水準が3つ以上ある場合には便利
+```{r}
+emmeans(model[[5]],pairwise~group|timing)$contrasts #事前と事後における群間比較
+```
+.small[参考URL:[https://cran.r-project.org/web/packages/emmeans/vignettes/interactions.html](https://cran.r-project.org/web/packages/emmeans/vignettes/interactions.html)]
+
+```{r,include=F}
+emmeans(model[[5]],pairwise~timing|group)$contrasts #両群における事前と事後の比較
+```
+
+
+---
+### おまけ2
+* 今回はもとからlong型で1行が1試行となっていましたが，このようなデータに整形するのに困ったら，tidyrパッケージがオススメです
+
+  - [変数が多い研究デザイン系の縦横変換](https://tam07pb915.wordpress.com/2015/11/29/tidyr/)
+  - [tidyr — シンプルなデータ変形ツール](https://heavywatal.github.io/rstats/tidyr.html)
+

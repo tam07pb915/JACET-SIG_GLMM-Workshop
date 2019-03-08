@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>GLMM Workshop</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="@早稲田大学" />
+    <link rel="stylesheet" href="My-theme.css" type="text/css" />
+    <link rel="stylesheet" href="My-font.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# GLMM Workshop
+## JACET英語語彙・英語辞書・リーディング研究会合同研究会
+### <span class="citation">@早稲田大学</span>
+### 3/9/2019
+
+---
+
+
+# Today's Menu
+* はじめに
+    + 経緯
+    + 注意事項
+* WSの準備
+    + RStudio Serverの準備
+    + RおよびRStudioの準備
+* 一般（化）線形（混合）モデルの概略
+* データ分析
+   +一般化線形モデル
+   +一般化線形混合モデル
+* おわりに
+
+---
+class: my-one-page-font
+# はじめに  
+
+* 経緯
+
+  
+今回のWSの分析の部分は下記のテクニカルレポートの内容を元にお話させていただきます（論文，データ，Rコードすべてオンライン公開済）。  
+
+
+.small[田村祐（2016）「外国語教育研究における二値データの分析－ロジスティック回帰を例に－」『外国語教育メディア学会中部支部外国語教育基礎研究部会2015年度報告論集』29–82. [リンク](https://www.letchubu.net/modules/xpwiki/?2015%E5%B9%B4%E5%BA%A6%E5%A0%B1%E5%91%8A%E8%AB%96%E9%9B%86)]  
+
+
+---
+# 注意事項①
+
+
+* 本WSでは，Rの基本的な動作トラブルにつきましてはご対応致しかねる場合がありますのでご了承ください
+
+--
+
+* Rの基本的な操作等に習熟されたい方につきましては，R初心者講習会に参加されることをおすすめします  
+
+## [第4回R初心者講習会(3/19-22)](https://www.rbootcamp.org/?p=723) 
+
+---
+# 注意事項②
+
+--
+* 本WSは2時間の設定となっていますが，実際のGLMMの.red[&lt;u&gt;**習得**&lt;/u&gt;]には，その倍以上の復習が必要となります
+
+--
+* 今回使用するコードはすべてweb上で公開していますので，復習の際にご利用ください
+  - GitHub: [https://github.com/tam07pb915/JACET-SIG_GLMM-Workshop](https://github.com/tam07pb915/JACET-SIG_GLMM-Workshop)
+
+--
+* 個別の分析に関するご相談にはお応えできない可能性が高いですので，参考文献をご参照ください
+
+---
+# 注意事項③
+
+--
+* 今回は，時間の都合上により線形混合効果モデル（Linear Mixed-Effect Model）は扱いません
+
+--
+* ただし，LMEの発展がGLMMであり，LMEは確率分布の指定が不要なだけですのでR上の分析はほぼ同じで，Rの関数で言えば下記のようになります
+  * `lme4::glmer()`-&gt; GLMM
+  * `lme4::lmer()` -&gt; LME
+
+
+---
+background-image: url("namae.png")
+---
+class: my-one-page-font
+## 簡単に自己紹介
+* 2014年(D1年時)に俗に言う「緑本」.small[（久保, 2012）]を読んでから統計モデリングを勉強するように
+* [Nagoya.R #12](https://atnd.org/events/58339)という勉強会で，「[一般化線形混合モデル入門の入門](https://www.slideshare.net/yutamura1/ss-42303827)」というRを使った線形混合効果モデルのやり方について発表
+* その後から自分の研究でもLMEやGLMMを使うように  
+  - .small[Tamura, Y. (2015). Reinvestigating consciousness-raising grammar task and noticing. _JABAET Journal, 19_, 19–47. -&gt; mixed-effect logistic regression]
+  - .small[Tamura, Y., Fukuta, J., Nishimura, Y., Harada, Y., Hara, K., &amp; Kato, D. (2019). Japanese EFL learners’ sentence processing of conceptual plurality: An analysis focusing on reciprocal verbs. _Applied Psycholinguistics, 41_, 59–91. -&gt; Gamma GLMM]
+
+---
+## WSの準備
+* RStudio Serverの準備  　　
+  - RStudio Serverを利用される方は，資料の指示にしたがってログインしてください
+  - RStudio Serverは文字通りインターネット上でRStuioを利用するものです
+  - RStudio Serverを利用される方は，.red[別途RやRStudioを立ち上げる必要はありません]
+* RまたはRStudioの起動
+  - ご自身のRを立ち上げてください（バージョンが古い方は使えないパッケージがある可能性があります）
+  - RStudioをご利用の方は，このWS用のProjectを作っておくことをおすすめします
+
+---
+class: my-one-page-font  
+## 一般（化）線形（混合）モデルの概略
+* 一般線形モデル
+  - いわゆる普通の回帰分析（単回帰，重回帰）
+  - .red[正規分布]が仮定される
+  - t検定や分散分析も線形モデルの一種
+* 一般化線形モデル
+  - .red[正規分布以外]の確率分布族を用いるもの
+    - 回数データ（単位時間あたりの生起回数）-&gt;ポアソン分布，負の二項分布
+    - 二値データ（正答・誤答）-&gt; 二項分布
+    - 非負の連続量（反応時間等）-&gt;ガンマ分布，逆正規分布  
+    
+---
+## なぜ一般"化"線形モデルなのか
+* 世の中には正規分布しないデータもたくさんある
+* 正規分布してなくてもデータ分析はできる
+* データが生み出された.red[メカニズム]に着目して分析できる
+* 確率分布とリンク関数の組み合わせでより柔軟でデータの実体に即した分析が可能
+* 導入としては，『緑本』がおすすめです
+
+久保拓哉(2012). 『データ解析のための統計モデリング入門：一般化線形モデル・階層ベイズモデル・MCMC』. 岩波書店
+
+---
+## 確率分布を考える
+
+---
+class: my-one-page-font  
+## 混合効果（mixed effect）とはなにか
+* .red[固定効果]＋.red[変量効果]のこと
+* 分散分析でいうF1.small[（被験者分析）]とF2.small[（項目分析）]を同時にやってしまうようなもの
+* 固定効果-&gt;説明変数（独立変数）のこと。いわゆる研究者が見たいもの
+* 変量効果-&gt;応答変数（従属変数）に影響を与えてしまうばらつき
+  - 追試を行うときに変わるモノ-&gt;変量効果
+      * 例: 単語の頻度効果を調べる追試
+          - 固定効果-&gt;単語の頻度（高・低またはあるコーパスでの頻度）
+          - 変量効果-&gt;実験参加者，単語（もとの研究と同じ刺激語であっても）  
+
+---
+## 混合効果（mixed effect）とはなにか（続き）
+
+--
+* 実験系でよく扱うデータは参加者と項目.small[（e.g,テスト項目や刺激文）]のばらつきを考慮しなくてはいけない
+--
+
+  - 例1：ある項目・参加者だけ難しい.small[（or 反応時間が長い）]-&gt;ランダム切片  
+
+--
+
+  - 例2：ある項目・参加者だけ頻度効果.small[（説明変数の影響）]が大きい-&gt;ランダム傾き
+
+ 
+
+---
+class: my-one-page-font  
+## 応用言語学の分野でも新しくない
+* Rと，混合効果モデルが簡単に実装可能な*lme4*パッケージの爆発的普及で一般化
+* 混合効果モデルのイントロ論文として私がいつもおすすめするもの
+  - .small[Cunnings, I. (2012). An overview of mixed-effects statistical models for second language researchers. *Second Language Research, 28*, 369–382. [doi:10.1177/0267658312443651](https://doi.org/10.1177/0267658312443651)]  
+  - .small[ Linck, J. A. &amp; Cunnings, I. (2015), The utility and application of mixed‐effects models in second language research. *Language Learning, 65*, 185-207. [doi:10.1111/lang.12117](https://doi.org/10.1111/lang.12117)]
+  
+---
+class: my-one-page-font  
+## 今回のWSで扱う分析
+### ロジスティック回帰分析
+* 0/1（成功・失敗）のデータを扱うときに使う
+* 二項分布を用いる
+  - `\(n\)`回（ただし `\(n&gt;0\)` ）の試行のうちの成功回数 `\(k\)` が発生する確率 `\(q\)` を求める
+  - 各試行は独立な試行（ベルヌーイ試行）
+  
+`\(p(k|N,q)=_{N}C_{k}*q^{k}(1-q)^{N-k}\)` 
+
+* コインを10回投げて4回表が出る確率は？.small[（ただしq=0.5とする）]
+`\(p(4|10,0.5)=_{10}C_{4}0.5^{4}(1-0.5)^{10-4}=\)` 0.205 
+
+---
+## ロジスティック関数の導入
+* 普通の線形回帰式
+
+`\(Y=\beta_{0}+\beta_{1}X_{1}...\)`
+
+* `\(Y\)`は従属変数， `\(\beta_{0}\)`は切片， `\(\beta_{1}X_{1}\)`は独立変数 `\(X\)`の係数であり，右辺は.red[線形予測子]と呼ばれる
+* 30人の学習者がいて，それぞれの学習者がある文法項目を正確に使用する確率を `\(q_{i}\)`としたときのロジスティック回帰モデル（ `\(z_{i}\)`には線形予測子が入っていると考える）
+
+`$$q_{i}={\rm logistic} (z_{i})=\frac{1}{1+\exp(-z_{i})}$$`
+---
+## ロジスティック関数からロジット関数へ
+* 先ほどのロジスティック関数を変形すると次のようになる
+
+`$${\rm log}(\frac{q_{i}}{1-q_{i}})=z_{i}$$`
+
+* この式の左辺はロジット関数と呼ばれる
+* ロジスティック関数とロジット関数は逆関数の関係にある
+* ロジスティクス関数と線形予測子の関係をつなぐリンク関数がロジットリンク関数
+
+
+---
+class: my-one-page-font 
+## ロジスティック回帰のまとめ
+* 下記のような方程式を解くこと
+`$${\rm log}(\frac{q_{i}}{1-q_{i}})=\beta_{0}+\beta_{1}X_{1}...$$`
+* 個人ごとの成功確率である `\(q_{i}\)`は得られたデータからわかることであり， `\(X_{1}\)`は独立変数の値である
+* `\(\beta_{0}\)`と `\(\beta_{1}...\)`を最尤推定.small[(maximum Likelihood estimation)]で求める
+* オッズ（ `\(\frac{q_{i}}{1-q_{i}}\)`）の対数( `\(log\)`)が線形予測子と等しいので次のようにも表現できる
+
+`$$\frac{q_{i}}{1-q_{i}}=\exp(\beta_{0}+\beta_{1}X_{1}...)$$`
+`$$=\exp(\beta_{0})*\exp(\beta_{1}X_{1})...$$`
+
+---
+# データ分析
+* ここからは，実際にRを動かしながらデータ分析を行っていきます
+* スライドではコードや出力結果を適宜省略していますが，分析のすべてのコードと出力は印刷資料に載せています
+* これより先，灰色の背景で囲まれた部分は全てRのコードを示しているとご理解ください
+* Rのコードを打ち込むことに慣れていない方は，GitHubから.Rmdファイルまたは.htmlファイルをDLしてコピペすることをおすすめします
+
+---
+## データ分析の準備
+* RStudio Serverをお使いの方は，今回のWSに必要なパッケージはすでにインストール済です .small[（尾関先生ありがとうございます）]
+* ご自身のRまたはRStudioをご利用の方は，下記のコード.small[（#以降はコメントアウトですので打たなくてOKです）]を実行してパッケージのインストールをお願いします
+
+
+```r
+install.packages("lme4") #分析 
+install.packages("sjPlot") #可視化
+install.packages("broom")
+install.packages("emmeans") #下位検定と可視化
+install.packages("dplyr") #ハンドリング
+install.packages("tidyr") #ハンドリング
+install.packages("psych") #記述統計
+install.packages("MASS") #分析
+install.packages("car") #分析
+```
+
+---
+## パッケージの読み込み
+* インストールしたパッケージを使えるようにします
+
+```r
+library(lme4)
+library(sjPlot)
+library(broom)
+library(emmeans)
+library(dplyr)
+library(tidyr)
+library(psych)
+library(MASS)
+library(car)
+```
+
+---
+class: my-one-page-font 
+## 背景（GLM）
+* とある文法項目に対するフィードバックの効果検証.small[（※仮想データです）]
+  - 明示的（explicit）フィードバッ群
+  - 暗示的（implicit）フィードバック群
+* 事前と事後の伸びを比較
+* 学習者ごとにその項目を使った回数が異なる-&gt;割合にしてしまいがちだがそうしない
+* 参加者のTOEICスコアが異なる-&gt;low, mid, highみたいにしてしまいがちだがそうしない
+  - だいたいの場合分け方が恣意的
+  - 群分けすることでせっかくのデータが失われる
+  - 非線形の関係があるなら群分けしても...と思うがそれならGAM (General Additive Model)という手も.small[（cf. [Murakami, 2016](https://doi.org/10.1111/lang.12166))]
+
+---
+class: my-one-page-font 
+## 一般化線形モデル(`glm`関数)
+
+* 仮想データの読み込み
+
+
+```r
+sample1 &lt;-read.csv("http://bit.ly/kisoken2015Tamura_Sample1")
+head(sample1,5) #データの確認
+```
+
+```
+##   ID    group TOEIC timing try success
+## 1  1 implicit   579  test1   5       2
+## 2  2 implicit   735  test1  13       4
+## 3  3 implicit   477  test1  12       2
+## 4  4 implicit   653  test1   8       4
+## 5  5 implicit   416  test1   8       1
+```
+
+.small[* 変数の確認  
+  - ID: 参加者ID
+  - group: implicit / explicit
+  - TOEIC: 参加者のTOEICスコア
+  - timing: test1(事前)/test2(事後)
+  - try: 全使用回数
+  - success: 正用回数]
+
+---
+## 成功確率の記述統計を出してみる①
+まず，成功回数/試行回数を計算して成功率データの列をsample1に付け加える
+
+```r
+sample1$acc&lt;-rep(0,nrow(sample1)) #まずは新しい列を用意
+for (i in 1:nrow(sample1)){
+  sample1[i,7]&lt;-sample1[i,6]/sample1[i,5]
+  }
+head(sample1) #accの行に割合データが追加されているか確認
+```
+
+```
+##   ID    group TOEIC timing try success       acc
+## 1  1 implicit   579  test1   5       2 0.4000000
+## 2  2 implicit   735  test1  13       4 0.3076923
+## 3  3 implicit   477  test1  12       2 0.1666667
+## 4  4 implicit   653  test1   8       4 0.5000000
+## 5  5 implicit   416  test1   8       1 0.1250000
+## 6  6 implicit   317  test1  10       2 0.2000000
+```
+
+---
+## 成功確率の記述統計を出してみる②
+
+```r
+sample1%&gt;% #%&gt;%はパイプ演算子で，左側でやったことを右側に渡すという意味
+  dplyr::group_by(group)%&gt;% #グループごとに分ける
+  dplyr::group_by(timing,add=T)%&gt;% #事前と事後で分ける
+  dplyr::summarize_at(.,vars(acc),funs(mean,sd,min,max)) #accの行について平均，標準偏差，最大・最長地を計算
+```
+
+```
+## # A tibble: 4 x 6
+## # Groups:   group [?]
+##   group    timing  mean    sd   min   max
+##   &lt;fct&gt;    &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 explicit test1  0.388 0.197 0     0.727
+## 2 explicit test2  0.542 0.217 0.143 1    
+## 3 implicit test1  0.406 0.256 0     0.857
+## 4 implicit test2  0.700 0.148 0.385 1
+```
+
+---
+## 成功確率の散布図を描いてみる①
+まずデータを分割します
+
+```r
+#Implicit group
+sample1%&gt;%
+  dplyr::filter(group=="implicit")%&gt;%
+  dplyr::select(ID,acc,timing)-&gt;acc_imp #必要な列だけ抜き出してacc_impに入れる
+
+#Explicit group
+sample1%&gt;%
+  dplyr::filter(group=="explicit")%&gt;%
+  dplyr::select(ID,acc,timing)-&gt;acc_exp #必要な列だけ抜き出してacc_expに入れる
+```
+
+---
+class: my-one-page-font 
+## 成功確率の散布図を描いてみる②
+コードが長いのでスライド上では省略しています。お手元の資料またはGitHub上のRコードを御覧ください。
+&lt;img src="slides_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+class: my-one-page-font
+### データ分析前の準備
+1.コーディングの変更
+* Rのデフォルトはダミーコーディング（0, 1)ですが，これを変更します
+* 参考: [http://talklab.psy.gla.ac.uk/tvw/catpred/](http://talklab.psy.gla.ac.uk/tvw/catpred/)
+
+
+```r
+c&lt;-contr.treatment(2)
+my.coding &lt;-matrix(rep(1/2,2,ncol=1))
+my.simple &lt;-c-my.coding
+print(my.simple)#my.simpleが-0.5, 0.5の行列になっているのを確認
+```
+
+```
+##      2
+## 1 -0.5
+## 2  0.5
+```
+
+```r
+contrasts(sample1$group)&lt;-my.simple #group変数のコーディングを変更
+contrasts(sample1$timing)&lt;-my.simple #timing変数のコーディングを変更
+str(sample1) #データセットの構造の確認
+```
+
+```
+## 'data.frame':	128 obs. of  7 variables:
+##  $ ID     : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ group  : Factor w/ 2 levels "explicit","implicit": 2 2 2 2 2 2 2 2 2 2 ...
+##   ..- attr(*, "contrasts")= num [1:2, 1] -0.5 0.5
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr  "explicit" "implicit"
+##   .. .. ..$ : chr "2"
+##  $ TOEIC  : int  579 735 477 653 416 317 603 892 696 559 ...
+##  $ timing : Factor w/ 2 levels "test1","test2": 1 1 1 1 1 1 1 1 1 1 ...
+##   ..- attr(*, "contrasts")= num [1:2, 1] -0.5 0.5
+##   .. ..- attr(*, "dimnames")=List of 2
+##   .. .. ..$ : chr  "test1" "test2"
+##   .. .. ..$ : chr "2"
+##  $ try    : int  5 13 12 8 8 10 8 12 3 5 ...
+##  $ success: int  2 4 2 4 1 2 4 8 2 2 ...
+##  $ acc    : num  0.4 0.308 0.167 0.5 0.125 ...
+```
+---
+### データ分析前の準備
+2.連続変数の中心化
+* 主に，多重共線性（変数間の相関が高くなりすぎてしまい誤った解釈を引き起こしてしまう問題）を回避するために連続変数を中心化する
+* 連続変数を標準化（zスコア化）すると，出力時の偏回帰係数は標準化偏回帰係数となる
+
+```r
+sample1$c.TOEIC &lt;-sample1$TOEIC-mean(sample1$TOEIC)
+head(sample1)
+```
+
+```
+##   ID    group TOEIC timing try success       acc     c.TOEIC
+## 1  1 implicit   579  test1   5       2 0.4000000  -73.921875
+## 2  2 implicit   735  test1  13       4 0.3076923   82.078125
+## 3  3 implicit   477  test1  12       2 0.1666667 -175.921875
+## 4  4 implicit   653  test1   8       4 0.5000000    0.078125
+## 5  5 implicit   416  test1   8       1 0.1250000 -236.921875
+## 6  6 implicit   317  test1  10       2 0.2000000 -335.921875
+```
+
+---
+class: my-one-page-font
+### 本分析
+* ロジスティック回帰は`cbind(成功回数, 試行回数-成功回数)`が応答変数
+  - 人の生死など，1人につき0か1かのみが与えられる場合は応答変数列は0または1が含まれるベクトルでよい
+* モデル式
+  - 基本の形は応答変数~説明変数+...
+  - `X+Y+X:Y`は`X`の主効果，`Y`の主効果，`X:Y`の交互作用の意味
+  - `X+Y+X:Y`は`X*Y`と同義である
+* 様々なモデルを比較するため，`model`というリスト形式の変数を作ってそこに結果を格納する
+
+
+```r
+model&lt;-list()
+model[[1]]&lt;-glm(cbind(success,try-success)~timing+group+timing:group,
+            family=binomial(link="logit"),data=sample1)
+```
+
+---
+class: my-one-page-font
+### 分析結果の確認
+
+```r
+summary(model[[1]])
+```
+
+```
+## 
+## Call:
+## glm(formula = cbind(success, try - success) ~ timing + group + 
+##     timing:group, family = binomial(link = "logit"), data = sample1)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -3.4334  -0.9310   0.1469   1.0627   2.6398  
+## 
+## Coefficients:
+##                Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)    -0.07161    0.05963  -1.201 0.229776    
+## timing2         0.82290    0.11926   6.900  5.2e-12 ***
+## group2          0.37897    0.11926   3.178 0.001484 ** 
+## timing2:group2  0.86899    0.23852   3.643 0.000269 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 294.91  on 127  degrees of freedom
+## Residual deviance: 229.43  on 124  degrees of freedom
+## AIC: 544.74
+## 
+## Number of Fisher Scoring iterations: 4
+```
+
+---
+* .small[Estimateは偏回帰係数，Std.Errorは標準誤差，Z.valueとp-valueは回帰係数の有意性検定]
+
+```
+## 
+## Call:
+## glm(formula = cbind(success, try - success) ~ timing + group + 
+##     timing:group, family = binomial(link = "logit"), data = sample1)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -3.4334  -0.9310   0.1469   1.0627   2.6398  
+## 
+## Coefficients:
+##                Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)    -0.07161    0.05963  -1.201 0.229776    
+## timing2         0.82290    0.11926   6.900  5.2e-12 ***
+## group2          0.37897    0.11926   3.178 0.001484 ** 
+## timing2:group2  0.86899    0.23852   3.643 0.000269 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 294.91  on 127  degrees of freedom
+## Residual deviance: 229.43  on 124  degrees of freedom
+## AIC: 544.74
+## 
+## Number of Fisher Scoring iterations: 4
+```
+
+---
+* .small[Residual deviance (残差逸脱度)が自由度より大きければ要注意]
+
+```
+## 
+## Call:
+## glm(formula = cbind(success, try - success) ~ timing + group + 
+##     timing:group, family = binomial(link = "logit"), data = sample1)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -3.4334  -0.9310   0.1469   1.0627   2.6398  
+## 
+## Coefficients:
+##                Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)    -0.07161    0.05963  -1.201 0.229776    
+## timing2         0.82290    0.11926   6.900  5.2e-12 ***
+## group2          0.37897    0.11926   3.178 0.001484 ** 
+## timing2:group2  0.86899    0.23852   3.643 0.000269 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 294.91  on 127  degrees of freedom
+## Residual deviance: 229.43  on 124  degrees of freedom
+## AIC: 544.74
+## 
+## Number of Fisher Scoring iterations: 4
+```
+
+```
+## [1] 124
+```
+
+---
+### 分析はうまくいったのか
+* フィードバックのタイプおよび介入効果の主効果と交互作用を含んだモデルの結果を確認すると，交互作用が`p &lt; .001`であることがわかる
+* しかしながら，残差逸脱度が229.433であり， 124を大きく上回っている
+  - これは過分散を意味している
+    - 元のデータの分散が二項分布で仮定されるものよりも多い or
+    - データを説明できる何らかの要因が含まれていない可能性
+    
+---
+class: my-one-page-font
+### 交互作用があるかどうかをどう判定するか
+* 交互作用項が含まれていないモデルをつくり，尤度比検定やAIC(Akaike Information Criterioin)の比較を行う
+
+```r
+#モデルの更新にはupdate()関数が便利。変える部分だけ+や-で調整する
+model[[2]]&lt;-update(model[[1]],.~.-timing:group) #交互作用を抜く
+anova(model[[1]],model[[2]],test = "Chisq") 
+```
+
+```
+## Analysis of Deviance Table
+## 
+## Model 1: cbind(success, try - success) ~ timing + group + timing:group
+## Model 2: cbind(success, try - success) ~ timing + group
+##   Resid. Df Resid. Dev Df Deviance  Pr(&gt;Chi)    
+## 1       124     229.43                          
+## 2       125     242.85 -1  -13.413 0.0002499 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+
+```r
+AIC(model[[1]])-AIC(model[[2]]) #小さい方がよいので負の値なら[[1]]がベター
+```
+
+```
+## [1] -11.41298
+```
+* 交互作用項が含まれる方が良いモデル
+
+---
+class: my-one-page-font
+### 熟達度の影響を考慮する
+* .small[交互作用があるのはわかったが，熟達度（TOEICスコア）の影響があるかもしれない]
+
+```r
+model[[3]]&lt;-update(model[[1]],.~.+c.TOEIC)
+#summary(model[[3]])
+```
+
+* .small[`model[[2]]`と`model[[3]]`を比べると`model[[3]]`のほうが残差逸脱度も低くて良さそう]
+
+```r
+anova(model[[2]],model[[3]],test="Chisq")
+```
+
+```
+## Analysis of Deviance Table
+## 
+## Model 1: cbind(success, try - success) ~ timing + group
+## Model 2: cbind(success, try - success) ~ timing + group + c.TOEIC + timing:group
+##   Resid. Df Resid. Dev Df Deviance  Pr(&gt;Chi)    
+## 1       125     242.85                          
+## 2       123     120.79  2   122.05 &lt; 2.2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+---
+### 熟達度の影響を考慮する
+* TOEICスコアを投入した`model[[3]]`のAICは438.103であり，他の2つよりも良いモデルだと言える
+
+```r
+#リストの要素に同じ関数を一度で適用できるのがsapply関数
+sapply(model,AIC)%&gt;%as.data.frame 
+```
+
+```
+##          .
+## 1 544.7422
+## 2 556.1551
+## 3 438.1033
+```
+
+* しかし，これではTOEICスコアの高低が文法使用の正確性に影響していることしかわからない
+* フィードバックの効果が熟達度によって異なるかもしれない
+
+---
+### 交互作用項のさらなる追加
+
+
+```r
+#binomialのデフォルトリンク関数はlogitなので省略可能
+model[[4]]&lt;-glm(cbind(success,try-success)~
+                timing*group*c.TOEIC,
+                data=sample1,family = binomial)
+```
+
+---
+* 三次の交互作用は有意ではない
+
+```r
+summary(model[[4]])
+```
+
+```
+## 
+## Call:
+## glm(formula = cbind(success, try - success) ~ timing * group * 
+##     c.TOEIC, family = binomial, data = sample1)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -3.4425  -0.4562   0.2200   0.6350   2.7425  
+## 
+## Coefficients:
+##                          Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)            -0.0718321  0.0638760  -1.125   0.2608    
+## timing2                 0.8765442  0.1277520   6.861 6.82e-12 ***
+## group2                  0.5336893  0.1277520   4.178 2.95e-05 ***
+## c.TOEIC                 0.0048189  0.0004900   9.834  &lt; 2e-16 ***
+## timing2:group2          0.7975327  0.2555039   3.121   0.0018 ** 
+## timing2:c.TOEIC        -0.0031306  0.0009801  -3.194   0.0014 ** 
+## group2:c.TOEIC         -0.0009760  0.0009801  -0.996   0.3193    
+## timing2:group2:c.TOEIC -0.0005613  0.0019602  -0.286   0.7746    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 294.91  on 127  degrees of freedom
+## Residual deviance: 108.58  on 120  degrees of freedom
+## AIC: 431.89
+## 
+## Number of Fisher Scoring iterations: 4
+```
+
+
+---
+### モデル選択という考え方
+* 回帰分析の変数投入方法にはいろいろな方法があるが，MASSパッケージの`step`関数を使うと，AICに基づいてモデル選択の結果を返してくれる
+* 一番複雑な`model[[4]]`をstep関数に渡すと，AICが最小となるモデルが得られる
+
+
+```r
+#結果が長いので省略
+step(model[[4]])
+step(model[[4]])-&gt;model[[5]] #選ばれたモデルをmodel[[5]]に
+```
+
+---
+
+```r
+summary(model[[5]])
+```
+
+```
+## 
+## Call:
+## glm(formula = cbind(success, try - success) ~ timing + group + 
+##     c.TOEIC + timing:group + timing:c.TOEIC, family = binomial, 
+##     data = sample1)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -3.4168  -0.4807   0.1656   0.6841   2.6773  
+## 
+## Coefficients:
+##                   Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)     -0.0617332  0.0633830  -0.974 0.330071    
+## timing2          0.8873053  0.1267660   7.000 2.57e-12 ***
+## group2           0.5365029  0.1273182   4.214 2.51e-05 ***
+## c.TOEIC          0.0047316  0.0004831   9.793  &lt; 2e-16 ***
+## timing2:group2   0.8260304  0.2546364   3.244 0.001179 ** 
+## timing2:c.TOEIC -0.0031966  0.0009663  -3.308 0.000939 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 294.91  on 127  degrees of freedom
+## Residual deviance: 109.71  on 122  degrees of freedom
+## AIC: 429.02
+## 
+## Number of Fisher Scoring iterations: 4
+```
+
+---
+* 残差逸脱度も問題なさそう
+
+```r
+model[[5]]$df.residual
+model[[5]]$deviance
+```
+
+```
+## [1] 122
+## [1] 109.7126
+```
+
+* 多重共線性も問題なさそう
+  - VIF (Variation Inflation Factor)
+  - 説明変数感の相関がゼロであればVIFは1になる
+  - VIFが5より大きければ多重共線性の可能性が大きく注意が必要（田中他, 2008, p.116）
+
+```r
+vif(model[[5]])
+```
+
+```
+##         timing          group        c.TOEIC   timing:group timing:c.TOEIC 
+##       1.052867       1.027494       1.051189       1.061369       1.037003
+```
+
+---
+### 図示（フィードバックのタイプの影響）
+
+```r
+plot_model(model[[5]],type="pred",terms = c("timing","group"))
+```
+
+&lt;img src="slides_files/figure-html/unnamed-chunk-25-1.png" style="display: block; margin: auto;" /&gt;
+---
+### 図示（フィードバックと熟達度の関係）
+
+```r
+plot_model(model[[5]],type="pred",terms = c("c.TOEIC","timing"))
+```
+
+&lt;img src="slides_files/figure-html/unnamed-chunk-26-1.png" style="display: block; margin: auto;" /&gt;
+
+```r
+#plot_model(model[[4]],type="pred",terms = c("c.TOEIC","timing","group"))
+```
+
+---
+### 分析のここまでのまとめ
+* どちらのフィードバックも効果がありそう
+* でも暗示的フィードバックのほうが効果が暗示的フィードバックよりも効果がありそう
+* 熟達度が低い学習者にとってフィードバックの効果がより大きそう
+
+---
+### 効果量（オッズ比）を求める①
+* ある事象の起こる確率が `\(p\)`で表されるとき，オッズは次のようになる
+
+`$$Odds = \frac{p}{1-p}$$`
+* オッズ比はオッズの比で表されるので，確率 `\(p\)`と確率 `\(q\)`のオッズ比は次のようになる
+
+`$$\frac{\frac{p}{1-p}}{\frac{q}{1-q}}$$`
+---
+### 効果量（オッズ比）を求める②
+* ロジット関数を思い出すと，これはオッズの対数であり，商の対数は対数の差と等しいので次のように表せる
+
+`$${\rm log}(\frac{q_{i}}{1-q_{i}})={\rm log}(q_{i})-log(1-q_{i})$$`
+* つまり，2つの確率のロジットの差がオッズ比の対数である
+
+`$${\rm log}(\frac{p}{1-p})-{\rm log}(\frac{q}{1-q})={\rm log}(\frac{\frac{p}{1-p}}{\frac{q}{1-q}})$$`
+---
+### 効果量（オッズ比）を求める③
+* このオッズ比の仕組みが今理解できなくても大丈夫です
+* 大事なことは次のこと
+
+### .red[偏回帰係数を指数変換するとオッズ比]
+
+* Rではexp()という関数があるので，オッズ比は次のように求められる
+
+```r
+#$coefficientsは結果の中の推定値に直接アクセスするという意味
+model[[5]]$coefficients%&gt;%exp
+```
+
+```
+##     (Intercept)         timing2          group2         c.TOEIC 
+##       0.9401337       2.4285765       1.7100163       1.0047428 
+##  timing2:group2 timing2:c.TOEIC 
+##       2.2842333       0.9968085
+```
+
+
+---
+### オッズ比を細かく見ていく
+* ダミー変数の作成  
+.small[※データセットを分けてやっても結果はそこまで変わらないです]
+
+```r
+#グループごと
+sample1$group.e&lt;-sample1$group
+sample1$group.i&lt;-sample1$group
+contrasts(sample1$group)+0.5-&gt;contrasts(sample1$group.e)
+contrasts(sample1$group)-0.5-&gt;contrasts(sample1$group.i)
+
+#テストごと
+sample1$timing1&lt;-sample1$timing
+sample1$timing2&lt;-sample1$timing
+contrasts(sample1$timing)+0.5-&gt;contrasts(sample1$timing1)
+contrasts(sample1$timing)-0.5-&gt;contrasts(sample1$timing2)
+```
+
+---
+class: my-one-page-font
+### グループごとのフィードバックの効果のオッズ比
+* 明示的フィードバックグループ
+
+```r
+glm(cbind(success, try-success)~ timing*group.e+c.TOEIC,
+    data = sample1,family = binomial)%&gt;%
+  tidy(.,conf.int=T,exponentiate=T)
+#tidy関数でオッズ比と信頼区間をわかりやすく表示
+```
+
+```
+## # A tibble: 5 x 7
+##   term             estimate std.error statistic  p.value conf.low conf.high
+##   &lt;chr&gt;               &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)         0.728  0.0805       -3.95 7.84e- 5    0.621     0.852
+## 2 timing2             1.52   0.160         2.62 8.75e- 3    1.11      2.09 
+## 3 group.e2            1.77   0.127         4.47 7.93e- 6    1.38      2.27 
+## 4 c.TOEIC             1.00   0.000478      9.84 7.69e-23    1.00      1.01 
+## 5 timing2:group.e2    2.62   0.252         3.84 1.26e- 4    1.61      4.31
+```
+
+---
+class: my-one-page-font
+### グループごとのフィードバックの効果のオッズ比
+* 暗示的フィードバックグループ
+
+```r
+glm(cbind(success, try-success)~ timing*group.i+c.TOEIC
+    ,data = sample1,family = binomial)%&gt;%
+  tidy(.,conf.int=T,exponentiate=T)
+#tidy関数でオッズ比と信頼区間をわかりやすく表示
+```
+
+```
+## # A tibble: 5 x 7
+##   term             estimate std.error statistic  p.value conf.low conf.high
+##   &lt;chr&gt;               &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)          1.29  0.0975        2.57 1.01e- 2     1.06      1.56
+## 2 timing2              4.00  0.195         7.12 1.09e-12     2.74      5.88
+## 3 group.i2             1.77  0.127         4.47 7.93e- 6     1.38      2.27
+## 4 c.TOEIC              1.00  0.000478      9.84 7.69e-23     1.00      1.01
+## 5 timing2:group.i2     2.62  0.252         3.84 1.26e- 4     1.61      4.31
+```
+
+---
+### 事前と事後でのTOEICスコアのオッズ比
+
+```r
+model[[6]]&lt;-glm(cbind(success, try-success)~ timing1*group+c.TOEIC*timing1,data = sample1,family = binomial) #事前
+model[[7]]&lt;-glm(cbind(success, try-success)~ timing2*group+c.TOEIC*timing2,data = sample1,family = binomial) #事後
+```
+
+* わかりにくいので，100倍して，100点上がったときのオッズ比を出す
+
+```r
+exp(model[[6]]$coefficients[4]*100)
+```
+
+```
+##  c.TOEIC 
+## 1.883223
+```
+
+```r
+exp(model[[7]]$coefficients[4]*100)
+```
+
+```
+##  c.TOEIC 
+## 1.367967
+```
+
+---
+class: my-one-page-font
+### 他にも便利な関数の紹介①
+
+* GLMなどのモデルをHTML形式のきれいなテーブルにしてくれるsjPlotパッケージのtab_model関数
+
+```r
+tab_model(model[[5]]) #引数でいろいろ調整できます
+```
+
+![sample](tab_model.png)
+---
+class: my-one-page-font
+###  他にも便利な関数の紹介②
+* epiDisplayというパッケージのlogistic.display関数でもテーブル形式でオッズ比がみれます
+
+```r
+install.packages("epiDisplay")
+```
+
+
+```r
+library(epiDisplay)
+```
+
+```
+## Warning: package 'epiDisplay' was built under R version 3.5.2
+```
+
+```
+## Loading required package: foreign
+```
+
+```
+## Loading required package: survival
+```
+
+```
+## Loading required package: nnet
+```
+
+```
+## 
+## Attaching package: 'epiDisplay'
+```
+
+```
+## The following objects are masked from 'package:psych':
+## 
+##     alpha, cs, lookup
+```
+
+```r
+logistic.display(model[[5]])
+```
+
+```
+##  
+##                        OR lower95ci upper95ci     Pr(&gt;|Z|)
+## timing2         2.4285765 1.8942982 3.1135455 2.567835e-12
+## group2          1.7100163 1.3323759 2.1946926 2.510277e-05
+## c.TOEIC         1.0047428 1.0037918 1.0056947 1.203979e-22
+## timing2:group2  2.2842333 1.3867352 3.7625942 1.178803e-03
+## timing2:c.TOEIC 0.9968085 0.9949225 0.9986982 9.393128e-04
+```
+
+---
+## ロジスティック回帰のいいところ
+* 線形モデルのように素点ではなく正答（成功）の確率を扱うため，結果の解釈が容易
+  - オッズ比を求めれば，AよりBのほうがX倍正答しやすいというような言い方ができる
+  - 分散分析の効果量は報告されど積極的に解釈しにくい
+* 分散分析では連続変数を独立変数としてモデルに投入できないが，回帰分析ならできる
+  - ロジスティック回帰で連続変数を入れると，独立変数が任意の単位分変化したときの従属変数の変化量を求めることができる
+  
+---  
+
+## 注意点
+* 連続変数を入れるときは，従属変数との線形的な関係があることが前提
+  - 例えば，低熟達度では高く，中熟達度で下がり，高熟達度でまた高くなるような非線形の関係がある場合はうまくモデリングできない
+  - 非線形の関係があるかどうかは図示または一般化加法モデル(General Additive Model）によって確認が必要
+  - GAMをやっている論文はあまり見かけないが，Akira Murakamiさんの下記の論文は例がわかりやすい上にRのコードも付録としてついているのでオススメ
+
+.small[Murakami, A. (2016), Modeling systematicity and individuality in nonlinear second language development: The case of English grammatical morphemes. _Language Learning, 66_, 834-871. doi:10.1111/lang.12166 ]  
+  
+---
+## 後半戦（GLMMへの拡張）
+
+* 先程のフィードバックの例では，TOEICスコアを利用することによりある程度個人差を考慮できた
+* では，テストのように複数の項目についての0/1データを分析する場合はどうすればよいのか
+* 多くの場合，実験の条件の統制や刺激の統制には限界がある
+* そこで，個人や項目のばらつきを変量効果としてモデルに組み込む**一般化線形混合モデル**を使用する
+* 説明変数を**固定効果(fixed effect)**，集団や個人の変動を**変量効果（random effect）**と呼ぶ
+* このような分析方法はマルチレベル分析とも呼ばれる（概説は清水, 2014の第1, 2章が丁寧でわかりやすい）
+
+---
+class: my-one-page-font
+### GLMMの分析に使うデータの概要
+* 下記の発表で用いられたデータ  
+
+.small[田村祐（2016）「文法性判断課題における反応時間と主観的測度は正答率を予測するか–文法項目の違いに焦点をあてて–」 外国語教育メディア学会中部支部外国語教育基礎研究部会第三回年次例会. 名古屋学院大学. [[投影資料]](https://speakerdeck.com/tam07pb915/kisoken3rd)]
+
+* 応答変数（response variable): 文法性判断課題の正答・誤答データ
+* 説明変数
+  - 反応時間
+  - 主観的測度（規則が説明できる or 直感である）
+  - 名詞の種類（普通名詞12項目・物質名詞12項目）
+    - 普通名詞の例：apple, dog, pen, knife, child
+    - 物質名詞の例：gold, wine, toast, rice
+
+---
+class: my-one-page-font
+### 概要
+* 実験
+  * それぞれの項目ごとに，文法文と非文法文があり，2つのリストに参加者をランダムに振り分けてカウンターバランス
+  * 刺激文24にフィラー文40文を加えた合計64文の文法性判断課題
+  * PC上で行われ，注視点(1000ms)-&gt;ブランク(500ms)-&gt;刺激文の提示
+  * キー押下によって文法性判断
+  * 判断後に直前の回答の判断のリソースを「自分の知っている規則である」「直感である」の2つから選択
+* 参加者
+  - 日本語を第一言語とする大学生・大学院生24名
+  - TOEICの平均スコアは704（_SD_ = 95.39, _n_ = 22）
+  
+---
+class: my-one-page-font
+### 一般化線形混合モデル(`glmer`関数)
+* データの読み込み
+
+```r
+sample2 &lt;-read.csv("http://bit.ly/kisoken2015Tamura_Sample2",header=T)
+head(sample2)
+```
+
+```
+##   ID itemID judgment    rt sub.measure form Type
+## 1  1     41        1 13420           0    A  CNP
+## 2  1     43        1  5952           1    A  CNP
+## 3  1     45        1  8717           1    A  CNP
+## 4  1     47        1 10398           1    A  CNP
+## 5  1     49        1  9511           1    A  CNP
+## 6  1     51        0 25420           1    A  CNP
+```
+
+.small[* 変数の確認  
+  - ID: 参加者ID
+  - itemID: 項目のID
+  - judgment: 文法性判断の正答・誤答（0/1）
+  - rt: 反応時間
+  - sub.measure: 主観的測度（0=直感，1=規則0）
+  - form: 参加者のフォーム
+  - Type: 名詞の種類]
+
+---
+class: my-one-page-font
+### 成功確率の記述統計
+* 先ほどのデータと違って1人のデータは1行に0/1が複数行となっているのでちょっと工夫が必要
+* コードは省略していますのでRmdファイルかお手元の資料を御覧ください
+* 普通名詞のほうが正答率が高そう
+* 直感よりも規則のほうが高そう
+
+```
+## 
+##  Descriptive statistics by group 
+## : 0
+## : CNP
+##    vars  n mean   sd median trimmed mad min max range  skew kurtosis   se
+## X1    1 22 0.67 0.31   0.67    0.71 0.4   0   1     1 -0.58    -0.53 0.07
+## -------------------------------------------------------- 
+## : 1
+## : CNP
+##    vars  n mean   sd median trimmed  mad  min max range  skew kurtosis
+## X1    1 24 0.82 0.21   0.89    0.85 0.16 0.25   1  0.75 -1.23     0.42
+##      se
+## X1 0.04
+## -------------------------------------------------------- 
+## : 0
+## : MNP
+##    vars  n mean   sd median trimmed mad min  max range  skew kurtosis   se
+## X1    1 24 0.45 0.25   0.46    0.46 0.3   0 0.83  0.83 -0.35    -1.02 0.05
+## -------------------------------------------------------- 
+## : 1
+## : MNP
+##    vars  n mean   sd median trimmed  mad min max range  skew kurtosis   se
+## X1    1 24 0.57 0.24    0.6    0.58 0.16   0   1     1 -0.34    -0.08 0.05
+```
+
+
+---
+class: my-one-page-font
+### 主観的測度の割合の記述統計
+
+```
+## 
+##  Descriptive statistics by group 
+## group: CNP
+##    vars  n mean   sd median trimmed  mad  min max range  skew kurtosis
+## X1    1 24 0.76 0.19   0.79    0.78 0.19 0.08   1  0.92 -1.75     4.23
+##      se
+## X1 0.04
+## -------------------------------------------------------- 
+## group: MNP
+##    vars  n mean   sd median trimmed  mad  min  max range  skew kurtosis
+## X1    1 24 0.58 0.22   0.62     0.6 0.19 0.08 0.83  0.75 -0.79    -0.52
+##      se
+## X1 0.04
+```
+* 普通名詞のほうが主観と答える割合が高そう
+---
+class: my-one-page-font
+### 反応時間の記述統計
+
+```
+## 
+##  Descriptive statistics by group 
+## : 0
+## : CNP
+##    vars  n     mean     sd median  trimmed     mad     min     max
+## X1    1 22 13804.19 6030.2  13464 13588.97 7059.04 2776.33 27309.4
+##       range skew kurtosis      se
+## X1 24533.07 0.29    -0.65 1285.64
+## -------------------------------------------------------- 
+## : 1
+## : CNP
+##    vars  n   mean      sd  median trimmed     mad     min      max
+## X1    1 24 9733.1 3585.92 9339.23 9689.01 4055.99 3959.78 15915.89
+##       range skew kurtosis     se
+## X1 11956.11 0.15    -1.27 731.97
+## -------------------------------------------------------- 
+## : 0
+## : MNP
+##    vars  n     mean      sd   median  trimmed     mad     min     max
+## X1    1 24 15443.42 6485.25 14680.83 15230.07 5446.95 5029.33 27184.5
+##       range skew kurtosis     se
+## X1 22155.17  0.4    -0.92 1323.8
+## -------------------------------------------------------- 
+## : 1
+## : MNP
+##    vars  n     mean      sd  median  trimmed     mad  min     max   range
+## X1    1 24 11157.53 5454.14 9218.39 10429.59 4800.74 4326 24987.7 20661.7
+##    skew kurtosis      se
+## X1  1.1     0.49 1113.32
+```
+* 直感って言うときのほうがRTが長そう
+
+---
+class: my-one-page-font
+###箱ひげ図を描く
+
+* コードが長いので省略しています
+* 青い点は平均値でバーは96%信頼区間
+
+```r
+### 図を描くためにデータフレームを作る
+sample2%&gt;%
+  dplyr::filter(Type=="CNP")%&gt;%
+  dplyr::group_by(ID)%&gt;%
+  dplyr::summarise(mean=mean(judgment,na.rm=T))-&gt;stat_cnp #ランダムに欠損がある場合，na.rm=Tを指定しないと欠損のある学習者のデータが落ちてしまう
+  
+stat_cnp&lt;-as.data.frame(stat_cnp)
+
+
+#For common nouns
+sample2%&gt;%
+  dplyr::filter(Type=="MNP")%&gt;%
+  dplyr::group_by(ID)%&gt;%
+  dplyr::summarise(mean=mean(judgment,na.rm=T))-&gt;stat_mnp #ランダムに欠損がある場合，na.rm=Tを指定しないと欠損のある学習者のデータが落ちてしまう
+
+stat_mnp&lt;-as.data.frame(stat_mnp)
+```
+
+
+```
+## Warning: package 'beeswarm' was built under R version 3.5.2
+```
+
+&lt;img src="slides_files/figure-html/unnamed-chunk-42-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+## 混合効果ロジスティック分析
+* 変量効果の指定方法
+ - |の右側にグルーピング変数，左側に切片と傾きを指定
+ - 項目の変量効果: `(1|itemID)` .small[1は切片を表す]
+ - 参加者の変量効果: `(1|ID)`.small[1は切片を表す]
+ - 傾きを入れる場合の例：`(1+Type|itemID)`, `(1+Type|ID)`
+* Barr et al. (2013) は，ランダム効果は考えられうる一番複雑なものを入れるように推奨しているが，たいていの場合収束しない(しかも時間がかかるので今回はやりません)
+
+---
+## コーディングの変更と連続変数の中心化
+
+
+```r
+#因子型に変更しないとコーディングを変更できない
+sample2$sub.measure&lt;-as.factor(sample2$sub.measure)
+sample2$Type&lt;-as.factor(sample2$Type)
+contrasts(sample2$sub.measure)&lt;-my.simple
+contrasts(sample2$Type)&lt;-my.simple
+#RTのデータは値が非常に大きく中心化だけではモデルが収縮しづらいので標準化する
+sample2$rt%&gt;%
+  scale%&gt;%
+  as.numeric-&gt;sample2$zrt
+```
+
+
+---
+### モデル構築
+* `glmerControl`は収束せずにエラーになってしまうことを避けるおまじないです
+
+```r
+fit&lt;-list()
+fit[[1]]&lt;-glmer(judgment~Type*sub.measure*zrt+
+                  (1+Type+sub.measure+zrt|ID)+(1+Type+sub.measure+zrt|itemID),
+                family=binomial,data=sample2,
+                glmerControl(optimizer = "bobyqa",optCtrl=list(maxfun=2e5)))
+```
+
+
+---
+class: my-one-page-font
+### 結果の確認
+
+```r
+summary(fit[[1]])
+```
+
+```
+## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: judgment ~ Type * sub.measure * zrt + (1 + Type + sub.measure +  
+##     zrt | ID) + (1 + Type + sub.measure + zrt | itemID)
+##    Data: sample2
+## Control: 
+## glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e+05))
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##      702      824     -323      646      548 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -2.5992 -0.6844  0.3395  0.5925  1.6014 
+## 
+## Random effects:
+##  Groups Name         Variance Std.Dev. Corr             
+##  itemID (Intercept)  0.32887  0.5735                    
+##         Type2        0.79867  0.8937    0.75            
+##         sub.measure2 0.70060  0.8370    0.65  0.99      
+##         zrt          0.04734  0.2176   -0.61  0.07  0.21
+##  ID     (Intercept)  0.26973  0.5194                    
+##         Type2        0.46535  0.6822   -0.82            
+##         sub.measure2 0.43806  0.6619   -0.47 -0.12      
+##         zrt          0.30472  0.5520   -0.81  0.32  0.90
+## Number of obs: 576, groups:  itemID, 48; ID, 24
+## 
+## Fixed effects:
+##                        Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)              0.7076     0.2071   3.416 0.000634 ***
+## Type2                   -1.3154     0.3764  -3.495 0.000475 ***
+## sub.measure2             0.6973     0.3247   2.147 0.031765 *  
+## zrt                     -0.1034     0.1820  -0.568 0.569974    
+## Type2:sub.measure2      -0.1679     0.5827  -0.288 0.773207    
+## Type2:zrt                0.1582     0.2769   0.571 0.567777    
+## sub.measure2:zrt        -0.1115     0.2676  -0.417 0.676826    
+## Type2:sub.measure2:zrt  -0.6521     0.5413  -1.205 0.228304    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) Type2  sb.ms2 zrt    Ty2:.2 Typ2:z sb.m2:
+## Type2       -0.125                                          
+## sub.measur2 -0.180  0.234                                   
+## zrt         -0.349  0.126  0.412                            
+## Typ2:sb.ms2  0.253 -0.104 -0.234 -0.061                     
+## Type2:zrt    0.085 -0.175 -0.114 -0.166  0.296              
+## sb.msr2:zrt  0.227 -0.079 -0.143  0.106  0.054  0.097       
+## Typ2:sb.m2: -0.064  0.232  0.081  0.066 -0.139  0.093 -0.189
+```
+
+---
+### GLMとGLMMで異なる部分
+* Random effsts
+ - ランダム効果の分散とSD-&gt;**SDは論文で報告すべき**
+ - ランダム効果間の相関係数が推定されている
+* Correlation of Fixed Effects
+ - 固定効果間の相関
+ - 著しく相関が高い場合多重共線性の疑い有り
+* 分析に用いられた観測数（Number of obs），itemIDの数，IDの数
+ - itemIDが48になっているのは，24文*文法文・非文法文になっているため
+ - 今回は文法性を考慮していないが，本来1つの項目に2条件以上ある場合は同じ項目として扱う
+ 
+---
+### 多重共線性の確認
+* Jaegerが作成したglmerの出力からVIFが計算可能なスクリプトを使用する
+* 2.5以上のものがあれば要チェック
+
+
+```r
+source("https://raw.githubusercontent.com/aufrank/R-hacks/master/mer-utils.R")
+vif.mer(fit[[1]])
+```
+
+```
+##                  Type2           sub.measure2                    zrt 
+##               1.150589               1.373793               1.298081 
+##     Type2:sub.measure2              Type2:zrt       sub.measure2:zrt 
+##               1.190906               1.212838               1.117969 
+## Type2:sub.measure2:zrt 
+##               1.161966
+```
+* 今回は問題なさそう
+
+---
+
+```r
+tab_model(fit[[1]],show.stat = T,transform = NULL)
+#transform=NULLを消すと，一番左がLog OddsではなくOdds Ratioになる
+```
+![sample](tab_model_glmm.png)
+
+---
+class: my-one-page-font
+### 図示
+* 交互作用はどれも有意ではなかったが，一応図示してみる
+* 名詞の種類と主観的測度
+
+```r
+plot_model(fit[[1]],type="pred",terms=c("Type","sub.measure"))
+```
+
+&lt;img src="slides_files/figure-html/unnamed-chunk-48-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+class: my-one-page-font
+### 図示②
+* 名詞の種類と反応時間
+
+```r
+plot_model(fit[[1]],type="pred",terms=c("zrt","Type"))
+```
+
+&lt;img src="slides_files/figure-html/unnamed-chunk-49-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+class: my-one-page-font
+### 図示③
+* 主観的測度と反応時間
+
+```r
+plot_model(fit[[1]],type="pred",terms=c("zrt","sub.measure"))
+```
+
+&lt;img src="slides_files/figure-html/unnamed-chunk-50-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+### モデルを単純にする
+* 今回は投入する変数の数があまり多くなかったが，変数が多すぎて複雑なモデルを単純化するのが困難な場合，ランダム切片のみのモデルに変数を1つずつ追加し，AICを減少させる変数から順番に投入していくという方法もある
+* もし時間があればあとでやってみます（多分ない）
+
+```r
+fit[[2]]&lt;-glmer(judgment~Type+sub.measure+
+                  (1+Type+sub.measure|ID)+(1+Type+sub.measure|itemID)
+                ,family=binomial,data=sample2,
+                glmerControl(optimizer = "bobyqa",optCtrl=list(maxfun=2e5)))
+```
+
+---
+### 変量効果を図示する①
+* 項目ごとの変量効果
+
+```r
+#スライドにおさめるために1つずつにしてますが，普段なら[[1]]は不要
+plot_model(fit[[2]],type="re")[[1]]
+```
+
+&lt;img src="slides_files/figure-html/unnamed-chunk-52-1.png" style="display: block; margin: auto;" /&gt;
+
+```r
+#plot_model(fit[[1]],type="re",sort.est = T,grid = F)とすると並び替えができる
+```
+
+---
+### 変量効果を図示する①
+* 参加者ごとの変量効果
+
+```r
+plot_model(fit[[2]],type="re")[[2]]
+```
+
+&lt;img src="slides_files/figure-html/unnamed-chunk-53-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+### 最終的な結果
+
+```r
+summary(fit[[2]])
+```
+
+
+![sample](tab_model_glmm2.png)
+
+---
+class: my-one-page-font
+### 結果の解釈
+* 主観的測度のオッズ比は1.9なので，規則を説明できるという場合のほうが，直感であるという場合よりも文法性判断に正答する確率が1.9倍高い
+* 名詞タイプのオッズ比は0.33なので，物質名詞が関わる文法性判断課題の正答率は普通名詞のそれよりも0.33倍
+ - 普通名詞を1としたときにその3割ほどしか正答確率がない
+* 反応時間が遅くても速くても正答率に影響があるという傾向が認められなかった
+ - 主観的測度との交互作用なし-&gt; 文法性判断が直感でも規則でもRTは正答率に影響しない
+ - 名詞タイプとの交互作用なし-&gt;普通名詞のときでも物質名詞のときでもRTは正答率に影響しない
+ 
+---
+class: my-one-page-font
+### おわりに
+* 一部コードが違いますが，より概念的な説明や参考文献などは，最初に紹介したテクニカルレポートに載っていますのでそちらをご参照ください
+* かなりパッケージに依存した形で処理を行っていますので，パッケージのアップデート等によって動かなくなる可能性もあります
+ - Rのバージョンを新しくする
+ - パッケージがアップデートされたらマニュアルを読んだりネットで調べて変更点を把握する
+ - ようなことも必要になることがあります
+* 論文にするときの報告の仕方等は，Linck and Cunnings (2015)に詳しいです
+* とにかく近年は統計解析技術の進歩が非常に早いです
+ - これさえできればというものでもないです
+ - 今回紹介した手法が5年後もそのまま使えるかはわかりません
+
+
+---
+class: my-one-page-font
+### 参考文献リスト
+* .small[Barr, D. J., Levy, R., Scheepers, C., &amp; Tily, H. J. (2013). Random effects structure for confirmatory hypothesis testing: Keep it maximal. _Journal of Memory and Language, 68_, 255–278.
+[doi:10.1016/j.jml.2012.11.001](https://doi.org/10.1016/j.jml.2012.11.001)]  
+* .small[Cunnings, I. (2012). An overview of mixed-effects statistical models for second language researchers. *Second Language Research, 28*, 369–382. [doi:10.1177/0267658312443651](https://doi.org/10.1177/0267658312443651)]  
+* .small[Murakami, A. (2016), Modeling systematicity and individuality in nonlinear second language development: The case of English grammatical morphemes. _Language Learning, 66_, 834-871. [doi:10.1111/lang.12166 ]((https://doi.org/10.1111/lang.12166)]
+* .small[ Linck, J. A. &amp; Cunnings, I. (2015), The utility and application of mixed‐effects models in second language research. *Language Learning, 65*, 185-207. [doi:10.1111/lang.12117](https://doi.org/10.1111/lang.12117)]
+* .small[久保拓弥 (2012). 『データ解析のための統計モデリング入門』 東京: 岩波書店.]
+* .small[清水裕士 (2014).『個人と集団のマルチレベル分析』京都：ナカニシヤ出版]
+---
+### おまけ
+* 手っ取り早く交互作用のあるモデルを検証したいときは，emmeans関数もあります
+* 特に水準が3つ以上ある場合には便利
+
+```r
+emmeans(model[[5]],pairwise~group|timing)$contrasts #事前と事後における群間比較
+```
+
+```
+## timing = test1:
+##  contrast              estimate        SE  df z.ratio p.value
+##  explicit - implicit -0.1234877 0.1783095 Inf  -0.693  0.4886
+## 
+## timing = test2:
+##  contrast              estimate        SE  df z.ratio p.value
+##  explicit - implicit -0.9495181 0.1817841 Inf  -5.223  &lt;.0001
+## 
+## Results are given on the log odds ratio (not the response) scale.
+```
+.small[参考URL:[https://cran.r-project.org/web/packages/emmeans/vignettes/interactions.html](https://cran.r-project.org/web/packages/emmeans/vignettes/interactions.html)]
+
+
+
+
+---
+### おまけ2
+* 今回はもとからlong型で1行が1試行となっていましたが，このようなデータに整形するのに困ったら，tidyrパッケージがオススメです
+
+  - [変数が多い研究デザイン系の縦横変換](https://tam07pb915.wordpress.com/2015/11/29/tidyr/)
+  - [tidyr — シンプルなデータ変形ツール](https://heavywatal.github.io/rstats/tidyr.html)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create();
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
