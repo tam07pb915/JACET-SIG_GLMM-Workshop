@@ -5,15 +5,15 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "2108300390",
+    "hash" : "3767226586",
     "id" : "32CB3EFB",
-    "lastKnownWriteTime" : 1552066968,
-    "last_content_update" : 1552066968411,
-    "path" : "C:/Users/Yu/OneDrive - Kansai University/2018/GLMM-Workshop/slides.Rmd",
+    "lastKnownWriteTime" : 1552099831,
+    "last_content_update" : 1552099831733,
+    "path" : "C:/Users/Yu/OneDrive/GitHub/JACET-SIG_GLMM-Workshop/slides.Rmd",
     "project_path" : "slides.Rmd",
     "properties" : {
-        "cursorPosition" : "975,168",
-        "scrollLine" : "943"
+        "cursorPosition" : "116,51",
+        "scrollLine" : "100"
     },
     "relative_order" : 4,
     "source_on_save" : false,

@@ -8,7 +8,21 @@
 [https://tam07pb915.github.io/slides.html](https://tam07pb915.github.io/slides.html)でスライドが見れます（ちょっとレイアウト崩れてるかもしれません）
 
 **注意事項**
-* 当日WSをに参加される方は，.RmdをRStudioまたはR上で開き，適宜コードを実行していくようにしてください
+* 当日WSをに参加される方は，次のいずれかの方法でご参加いただくと良いと思います
+  - RStudio Serverを利用される方
+    1. **Clone or download**->Download ZIPでファイルをすべてDLし，解凍
+    2. **File** -> **upload**から，解凍したZIPファイルの中のhandout.Rmdをアップロード
+    3. Rmdファイルの中のRコードを走らせていく
+  - ご自身のRStudioを利用される方
+    1. **Clone or download**->Download ZIPでファイルをすべてDLし，解凍
+    2. 解凍したZIPファイルの中のGLMM-Workshop.Rprojを起動
+    3. handout.Rmdの中にあるRコードを走らせていく
+  - ご自身のRを利用される方
+    1. **Clone or download**->Download ZIPでファイルをすべてDLし，解凍
+    2. Rを起動
+    3. ファイル->スクリプトを開くから，解凍したZIPファイルの中のhandout.Rmdを開く(拡張子の指定をAll filesにするのを忘れない）	
+    4. handout.Rmdが文字化けする場合は，handout.txtを開く
+    5. ```{r}...```で挟まれている行がRコードなので，そこを走らせる
 * WS中に無理に自分でコードを打ち込もうとしなくてOKです（よほどRに習熟している人でない限り追いつけないと思います）
 * 投影資料（slides.html)では，いくつかの部分でRコードを省略しています（slides.Rmdでは見れると思いますが）
 ### Contact

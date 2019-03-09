@@ -9,6 +9,11 @@ output:
     
 ---
 
+# お時間のある方
+* 下記のリンク先で，右の方にある緑色の**clone or download**をクリック
+[https://github.com/tam07pb915/JACET-SIG_GLMM-Workshop](https://github.com/tam07pb915/JACET-SIG_GLMM-Workshop)  
+* README.mdファイルの**注意事項**の部分を読み，R上でスクリプトを動かせるよう準備
+---
 # Today's Menu
 * はじめに
     + 経緯
@@ -29,7 +34,7 @@ class: my-one-page-font
 * 経緯
 
   
-今回のWSの分析の部分は下記のテクニカルレポートの内容を元にお話させていただきます（論文，データ，Rコードすべてオンライン公開済）。  
+今回のWSの分析の部分は下記のテクニカルレポートの内容を元にお話させていただきます（論文，データ，Rコードすべてオンライン公開済）。  使用するデータは同じですが，Rのコードは一部異なります。
 
 
 .small[田村祐（2016）「外国語教育研究における二値データの分析－ロジスティック回帰を例に－」『外国語教育メディア学会中部支部外国語教育基礎研究部会2015年度報告論集』29–82. [リンク](https://www.letchubu.net/modules/xpwiki/?2015%E5%B9%B4%E5%BA%A6%E5%A0%B1%E5%91%8A%E8%AB%96%E9%9B%86)]  
@@ -84,14 +89,32 @@ class: my-one-page-font
   - .small[Tamura, Y., Fukuta, J., Nishimura, Y., Harada, Y., Hara, K., & Kato, D. (2019). Japanese EFL learners’ sentence processing of conceptual plurality: An analysis focusing on reciprocal verbs. _Applied Psycholinguistics, 41_, 59–91. -> Gamma GLMM]
 
 ---
+class: my-one-page-font
 ## WSの準備
 * RStudio Serverの準備  　　
   - RStudio Serverを利用される方は，資料の指示にしたがってログインしてください
   - RStudio Serverは文字通りインターネット上でRStuioを利用するものです
   - RStudio Serverを利用される方は，.red[別途RやRStudioを立ち上げる必要はありません]
+  
 * RまたはRStudioの起動
   - ご自身のRを立ち上げてください（バージョンが古い方は使えないパッケージがある可能性があります）
-  - RStudioをご利用の方は，このWS用のProjectを作っておくことをおすすめします
+
+---
+class: my-one-page-font
+- RStudio Serverを利用される方
+    1. .small[**Clone or download**->Download ZIPでファイルをすべてDLし，解凍]
+    2. .small[**File** -> **upload**から，解凍したZIPファイルの中のhandout.Rmdをアップロード]
+    3. .small[Rmdファイルの中のRコードを走らせていく]
+  - ご自身のRStudioを利用される方
+    1. .small[**Clone or download**->Download ZIPでファイルをすべてDLし，解凍]
+    2. .small[解凍したZIPファイルの中のGLMM-Workshop.Rprojを起動]
+    3. .small[handout.Rmdの中にあるRコードを走らせていく]
+  - ご自身のRを利用される方
+    1..small[ **Clone or download**->Download ZIPでファイルをすべてDLし，解凍]
+    2. .small[Rを起動]
+    3. .small[ファイル->スクリプトを開くから，解凍したZIPファイルの中のhandout.Rmdを開く(拡張子の指定をAll filesにするのを忘れない）	]
+    4..small[ handout.Rmdが文字化けする場合は，handout.txtを開く]
+    5..small[ ```{r}...```で挟まれている行がRコードなので，そこを走らせる]
 
 ---
 class: my-one-page-font  
